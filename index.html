@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roam Sepulture Image Gallery</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1><i class="fas fa-images"></i> Roam Sepulture Image Gallery</h1>
+            <p class="subtitle">Browse through various images and photos with advanced filtering and grouping</p>
+        </header>
+        
+        <div class="controls">
+            <div class="sort-controls">
+                <label for="sort-select">Sort by:</label>
+                <select id="sort-select">
+                    <option value="ranking-asc">Ranking (Low to High)</option>
+                    <option value="ranking-desc">Ranking (High to Low)</option>
+                    <option value="name-asc">Name (A to Z)</option>
+                    <option value="name-desc">Name (Z to A)</option>
+                </select>
+            </div>
+            
+            <div class="filter-controls">
+                <label>Filter by tags:</label>
+                <input type="text" id="tag-search" placeholder="Search tags...">
+                <button class="clear-filters" onclick="clearAllFilters()">Clear Filters</button>
+            </div>
+        </div>
+        
+        <div class="tag-cloud" id="tag-cloud"></div>
+        
+        <div class="gallery" id="gallery">
+            <!-- Images will be populated by JavaScript -->
+        </div>
+        
+        <div class="settings-panel" id="settings-panel" style="display: none;">
+            <div class="settings-header">
+                <h3><i class="fas fa-cogs"></i> Gallery Settings</h3>
+                <button class="settings-toggle" onclick="toggleSettings()">Close Settings</button>
+            </div>
+            
+            <div class="settings-row">
+                <label>Current JSON File:</label>
+                <select id="json-file-selector" class="settings-input">
+                    <option value="">Select a JSON file...</option>
+                </select>
+                <button class="settings-button" onclick="loadSelectedJsonFile()">Load</button>
+            </div>
+            
+            <div class="settings-row">
+                <label>Custom JSON File:</label>
+                <input type="text" id="custom-json-file" class="settings-input" 
+                       placeholder="Enter JSON file path or name">
+                <button class="settings-button" onclick="setCustomJsonFile()">Load Custom</button>
+            </div>
+            
+            <div class="settings-row">
+                <label>File Browser:</label>
+                <button class="settings-button secondary" onclick="browseForJsonFile()">
+                    <i class="fas fa-folder-open"></i> Browse Files
+                </button>
+                <button class="settings-button secondary" onclick="resetToFallback()">
+                    <i class="fas fa-undo"></i> Use Sample Data
+                </button>
+            </div>
+            
+            <div class="current-settings" id="current-settings">
+                <strong>Current Data Source:</strong> <span id="current-json-file">Loading...</span>
+            </div>
+        </div>
+
+        <div class="management-section">
+            <h3><i class="fas fa-tools"></i> Gallery Management</h3>
+            
+            <div class="management-buttons">
+                <button onclick="toggleSettings()" class="btn-primary">
+                    <i class="fas fa-cogs"></i> Settings
+                </button>
+                <button onclick="refreshGallery()" class="btn-accent">
+                    <i class="fas fa-sync"></i> Refresh Gallery
+                </button>
+                <button onclick="exportGalleryData()" class="btn-secondary">
+                    <i class="fas fa-download"></i> Export Data
+                </button>
+                <button onclick="importGalleryData()" class="btn-secondary">
+                    <i class="fas fa-upload"></i> Import Data
+                </button>
+                <button onclick="diagnoseJson()" class="btn-warning">
+                    <i class="fas fa-search"></i> Diagnose JSON
+                </button>
+                <button onclick="listAvailableFiles()" class="btn-secondary">
+                    <i class="fas fa-list"></i> List Files
+                </button>
+            </div>
+            
+            <div class="usage-instructions">
+                <h4>How to manage your gallery:</h4>
+                <p><strong>1. Load Data:</strong> Use the Settings panel to load JSON files with image data</p>
+                <p><strong>2. Browse Files:</strong> Use the file browser to select JSON files from your system</p>
+                <p><strong>3. Image Groups:</strong> Create collections with major images and subsidiary images</p>
+                <p><strong>4. Import/Export:</strong> Use the buttons above to manage your gallery data</p>
+                <p><strong>5. Structure:</strong> Each image needs: title, description, src (for major images), and display properties</p>
+                
+                <details class="json-example">
+                    <summary>JSON Format Example</summary>
+                    <pre>{
+  "images": [
+    {
+      "id": 1,
+      "title": "Sunset Beach Collection",
+      "description": "Beautiful sunset at the beach with multiple perspectives",
+      "src": "path/to/your/image.jpg",
+      "ranking": 9.2,
+      "tags": ["sunset", "beach", "ocean"],
+      "width": "600px",
+      "height": "400px",
+      "gridSpan": 2,
+      "isMajor": true,
+      "groupId": "group-1"
+    },
+    {
+      "id": 2,
+      "title": "Sunset Beach - Wide Shot",
+      "src": "path/to/subsidiary1.jpg",
+      "width": "400px",
+      "height": "150px",
+      "gridSpan": 2,
+      "isMajor": false,
+      "groupId": "group-1",
+      "majorImageId": 1
+    }
+  ]
+}</pre>
+                    <div class="format-notes">
+                        <strong>Major Images:</strong> Include ranking, tags, description (used for filtering/sorting)<br>
+                        <strong>Subsidiary Images:</strong> Inherit metadata from major image, only need src, width, height, gridSpan<br>
+                        <strong>Standalone Images:</strong> Set isMajor: true without groupId for individual display
+                    </div>
+                </details>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Viewer -->
+    <div class="fullscreen-viewer" id="fullscreen-viewer">
+        <div class="fullscreen-controls">
+            <button class="fullscreen-btn" onclick="zoomIn()" title="Zoom In">
+                <i class="fas fa-search-plus"></i>
+            </button>
+            <button class="fullscreen-btn" onclick="zoomOut()" title="Zoom Out">
+                <i class="fas fa-search-minus"></i>
+            </button>
+            <button class="fullscreen-btn" onclick="resetZoom()" title="Reset Zoom">
+                <i class="fas fa-expand-arrows-alt"></i>
+            </button>
+            <button class="fullscreen-btn" onclick="closeFullscreen()" title="Close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <img class="fullscreen-image" id="fullscreen-image" src="" alt="">
+        <div class="zoom-indicator" id="zoom-indicator">100%</div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 20px;"></i>
+            <p>Loading gallery data...</p>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

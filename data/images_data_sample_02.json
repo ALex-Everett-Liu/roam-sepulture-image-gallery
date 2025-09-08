@@ -1,0 +1,106 @@
+{
+  "images": [
+    {
+      "id": 1,
+      "title": "Sunset Landscape",
+      "description": "Beautiful sunset over mountains",
+      "src": null,
+      "ranking": 9.25,
+      "tags": ["landscape", "sunset", "nature", "mountains"]
+    },
+    {
+      "id": 2,
+      "title": "City Skyline",
+      "description": "Modern city skyline at night",
+      "src": null,
+      "ranking": 8.75,
+      "tags": ["city", "urban", "night", "skyline"]
+    },
+    {
+      "id": 3,
+      "title": "Ocean Waves",
+      "description": "Peaceful ocean waves at dawn",
+      "src": null,
+      "ranking": 7.8,
+      "tags": ["ocean", "water", "dawn", "peaceful"]
+    },
+    {
+      "id": 4,
+      "title": "Forest Path",
+      "description": "Serene forest path in autumn",
+      "src": null,
+      "ranking": 8.9,
+      "tags": ["forest", "nature", "autumn", "trees"]
+    },
+    {
+      "id": 5,
+      "title": "Desert Dunes",
+      "description": "Golden sand dunes at sunset",
+      "src": null,
+      "ranking": 9.0,
+      "tags": ["desert", "sand", "sunset", "golden"]
+    },
+    {
+      "id": 6,
+      "title": "Mountain Peak",
+      "description": "Snow-capped mountain peak",
+      "src": null,
+      "ranking": 9.5,
+      "tags": ["mountain", "snow", "peak", "winter"]
+    },
+    {
+      "id": 7,
+      "title": "Urban Street",
+      "description": "Busy street in downtown",
+      "src": null,
+      "ranking": 7.2,
+      "tags": ["urban", "street", "city", "busy"]
+    },
+    {
+      "id": 8,
+      "title": "Lake Reflection",
+      "description": "Crystal clear lake with mountain reflection",
+      "src": null,
+      "ranking": 8.6,
+      "tags": ["lake", "reflection", "mountain", "clear"]
+    },
+    {
+      "id": 9,
+      "title": "Flower Garden",
+      "description": "Colorful flower garden in spring",
+      "src": null,
+      "ranking": 8.3,
+      "tags": ["flowers", "garden", "spring", "colorful"]
+    },
+    {
+      "id": 10,
+      "title": "Thunderstorm",
+      "description": "Dramatic thunderstorm with lightning",
+      "src": null,
+      "ranking": 9.8,
+      "tags": ["storm", "lightning", "dramatic", "weather"]
+    },
+    {
+      "id": 11,
+      "title": "Beach Sunrise",
+      "description": "Golden sunrise over calm beach",
+      "src": null,
+      "ranking": 8.9,
+      "tags": ["beach", "sunrise", "golden", "calm"]
+    },
+    {
+      "id": 12,
+      "title": "Wildlife",
+      "description": "Wild deer in natural habitat",
+      "src": null,
+      "ranking": 9.1,
+      "tags": ["wildlife", "deer", "nature", "animals"]
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "lastUpdated": "2025-07-26",
+    "totalImages": 12,
+    "availableTags": ["landscape", "sunset", "nature", "mountains", "city", "urban", "night", "skyline", "ocean", "water", "dawn", "peaceful", "forest", "autumn", "trees", "desert", "sand", "golden", "mountain", "snow", "peak", "winter", "street", "busy", "lake", "reflection", "clear", "flowers", "garden", "spring", "colorful", "storm", "lightning", "dramatic", "weather", "beach", "sunrise", "calm", "wildlife", "deer", "animals"]
+  }
+}

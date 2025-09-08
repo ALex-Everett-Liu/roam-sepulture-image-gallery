@@ -1,0 +1,152 @@
+{
+  "images": [
+    {
+      "id": 1,
+      "title": "Sunset Beach Collection",
+      "description": "Beautiful sunset at the beach with multiple perspectives",
+      "src": "https://picsum.photos/600/400",
+      "ranking": 9.2,
+      "tags": ["sunset", "beach", "ocean", "golden-hour"],
+      "width": "600px",
+      "height": "400px",
+      "gridSpan": 2,
+      "isMajor": true,
+      "groupId": "group-1"
+    },
+    {
+      "id": 2,
+      "title": "Sunset Beach - Wide Shot",
+      "src": "https://picsum.photos/800/300",
+      "width": "400px",
+      "height": "150px",
+      "gridSpan": 2,
+      "isMajor": false,
+      "groupId": "group-1",
+      "majorImageId": 1
+    },
+    {
+      "id": 3,
+      "title": "Sunset Beach - Detail",
+      "src": "https://picsum.photos/300/300",
+      "width": "200px",
+      "height": "200px",
+      "gridSpan": 1,
+      "isMajor": false,
+      "groupId": "group-1",
+      "majorImageId": 1
+    },
+    {
+      "id": 4,
+      "title": "Sunset Beach - Close-up",
+      "src": "https://picsum.photos/250/350",
+      "width": "150px",
+      "height": "210px",
+      "gridSpan": 1,
+      "isMajor": false,
+      "groupId": "group-1",
+      "majorImageId": 1
+    },
+    {
+      "id": 5,
+      "title": "Mountain Peak Collection",
+      "description": "Stunning mountain peak with different angles",
+      "src": "https://picsum.photos/500/500",
+      "ranking": 8.7,
+      "tags": ["mountains", "nature", "landscape", "snow"],
+      "width": "500px",
+      "height": "500px",
+      "gridSpan": 2,
+      "isMajor": true,
+      "groupId": "group-2"
+    },
+    {
+      "id": 6,
+      "title": "Mountain Peak - Side View",
+      "src": "https://picsum.photos/400/600",
+      "width": "300px",
+      "height": "450px",
+      "gridSpan": 1,
+      "isMajor": false,
+      "groupId": "group-2",
+      "majorImageId": 5
+    },
+    {
+      "id": 7,
+      "title": "Mountain Peak - Summit",
+      "src": "https://picsum.photos/350/250",
+      "width": "280px",
+      "height": "200px",
+      "gridSpan": 1,
+      "isMajor": false,
+      "groupId": "group-2",
+      "majorImageId": 5
+    },
+    {
+      "id": 8,
+      "title": "City Skyline Collection",
+      "description": "Modern city skyline at different times of day",
+      "src": "https://picsum.photos/1000/400",
+      "ranking": 8.9,
+      "tags": ["city", "skyline", "urban", "architecture"],
+      "width": "100%",
+      "height": "400px",
+      "gridSpan": 4,
+      "isMajor": true,
+      "groupId": "group-3"
+    },
+    {
+      "id": 9,
+      "title": "City Skyline - Night",
+      "src": "https://picsum.photos/600/350",
+      "width": "400px",
+      "height": "230px",
+      "gridSpan": 2,
+      "isMajor": false,
+      "groupId": "group-3",
+      "majorImageId": 8
+    },
+    {
+      "id": 10,
+      "title": "City Skyline - Day",
+      "src": "https://picsum.photos/450/300",
+      "width": "300px",
+      "height": "200px",
+      "gridSpan": 1,
+      "isMajor": false,
+      "groupId": "group-3",
+      "majorImageId": 8
+    },
+    {
+      "id": 11,
+      "title": "Forest Path Collection",
+      "description": "Serene forest path in autumn",
+      "src": "https://picsum.photos/550/350",
+      "ranking": 8.5,
+      "tags": ["forest", "autumn", "trees", "path"],
+      "width": "550px",
+      "height": "350px",
+      "gridSpan": 2,
+      "isMajor": true,
+      "groupId": "group-4"
+    },
+    {
+      "id": 12,
+      "title": "Standalone Ocean Wave",
+      "description": "Powerful ocean wave",
+      "src": "https://picsum.photos/400/300",
+      "ranking": 7.8,
+      "tags": ["ocean", "wave", "water", "power"],
+      "width": "400px",
+      "height": "300px",
+      "gridSpan": 1,
+      "isMajor": true
+    }
+  ],
+  "metadata": {
+    "version": "2.0",
+    "description": "Image gallery with group functionality",
+    "totalImages": 12,
+    "totalGroups": 4,
+    "features": ["image-groups", "major-subsidiary", "inherited-metadata"]
+  }
+}
