@@ -22,6 +22,8 @@
                     <option value="ranking-desc">Ranking (High to Low)</option>
                     <option value="name-asc">Name (A to Z)</option>
                     <option value="name-desc">Name (Z to A)</option>
+                    <option value="date-asc">Date Added (Oldest First)</option>
+                    <option value="date-desc">Date Added (Newest First)</option>
                 </select>
             </div>
             
@@ -121,7 +123,8 @@
       "height": "400px",
       "gridSpan": 2,
       "isMajor": true,
-      "groupId": "group-1"
+      "groupId": "group-1",
+      "date": "2025-01-26T16:45:00.000Z"
     },
     {
       "id": 2,
@@ -139,7 +142,9 @@
                     <div class="format-notes">
                         <strong>Major Images:</strong> Include ranking, tags, description (used for filtering/sorting)<br>
                         <strong>Subsidiary Images:</strong> Inherit metadata from major image, only need src, width, height, gridSpan<br>
-                        <strong>Standalone Images:</strong> Set isMajor: true without groupId for individual display
+                        <strong>Standalone Images:</strong> Set isMajor: true without groupId for individual display<br>
+                        <strong>Date Field:</strong> Automatically added when importing new images (ISO 8601 format)<br>
+                        <strong>Sorting:</strong> Can sort by date added (oldest/newest first) in addition to ranking and name
                     </div>
                 </details>
             </div>

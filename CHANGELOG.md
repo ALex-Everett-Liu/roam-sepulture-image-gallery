@@ -5,6 +5,28 @@ All notable changes to the Roam Sepulture Image Gallery project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2025-01-26
+
+### Added
+- **Automatic timestamp functionality**
+  - "date" field automatically added to new images using OS system time
+  - ISO 8601 format timestamps (e.g., "2025-01-26T16:45:00.000Z")
+  - Backward compatibility with existing images (no date field required)
+  - Human-readable date display (Today, Yesterday, X days ago, etc.)
+  - Date-based sorting for both major and subsidiary images
+- **Enhanced sorting options**
+  - Added "Date Added (Oldest First)" and "Date Added (Newest First)" sort options
+  - Date display integration in image captions and group headers
+  - Consistent date formatting across all image types
+- **Improved data handling**
+  - Automatic date assignment during JSON import operations
+  - Non-destructive date handling (preserves existing dates)
+  - Real-time date formatting for user display
+- **User interface updates**
+  - Added date information to image metadata display
+  - Updated documentation to reflect new date functionality
+  - Enhanced JSON format examples with date field examples
+
 ## [0.1.0] - 2025-01-26
 
 ### Added
@@ -17,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Grid-based layout with custom spanning options
 - **Comprehensive filtering and sorting**
   - Tag-based filtering with real-time search
-  - Multiple sorting options: ranking (asc/desc), name (asc/desc)
+  - Multiple sorting options: ranking (asc/desc), name (asc/desc), date added (oldest/newest first)
   - Interactive tag cloud with visual feedback
   - Clear filters functionality
 - **Professional fullscreen viewer**
@@ -54,7 +76,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Electron application architecture**
   - Main process (`main.js`) for window and system management
   - Renderer process (`renderer.js`) for UI logic and interactions
-  - Express server (`server.js`) for API and data handling
+  - Express server (`server.js`) for backend API and static file serving
+  - IPC communication for native file dialogs and system integration
 - **Modern web technologies**
   - HTML5 with semantic markup
   - CSS3 with custom properties and modern layouts
@@ -65,6 +88,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Multiple data source locations (data/, temp/, custom paths)
   - Backward compatibility with original web version formats
   - Metadata inheritance system for grouped images
+- **Data management system**
+  - JSON-based image storage with flexible schema
+  - Support for both grouped and standalone image formats
+  - Metadata inheritance system for subsidiary images
+  - Real-time validation and error handling
+- **User interface design**
+  - Responsive grid layout with custom sizing
+  - Interactive controls with visual feedback
+  - Professional styling with CSS variables
+  - Accessibility features and keyboard navigation
+- **Development environment**
+  - Hot reload development server
+  - Comprehensive logging and debugging
+  - Cross-platform compatibility (Windows, macOS, Linux)
+  - Production-ready build configuration
 
 ### Sample Data Included
 - `images_data_groups.json` - Demonstrates grouping and subsidiary features

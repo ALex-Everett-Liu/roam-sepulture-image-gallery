@@ -39,6 +39,38 @@ let isLoading = false;
 let currentJsonFile = 'images_data_groups.json';
 let availableFiles = [];
 
+// Utility function to format dates
+function formatDate(dateString) {
+    if (!dateString) return 'Unknown';
+
+    try {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) {
+            return 'Today';
+        } else if (diffDays === 1) {
+            return 'Yesterday';
+        } else if (diffDays < 7) {
+            return `${diffDays} days ago`;
+        } else if (diffDays < 30) {
+            const weeks = Math.floor(diffDays / 7);
+            return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+        } else if (diffDays < 365) {
+            const months = Math.floor(diffDays / 30);
+            return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+        } else {
+            const years = Math.floor(diffDays / 365);
+            return `${years} ${years === 1 ? 'year' : 'years'} ago`;
+        }
+    } catch (error) {
+        console.warn('Error formatting date:', dateString, error);
+        return 'Unknown';
+    }
+}
+
 // Initialize the page
 document.addEventListener('DOMContentLoaded', function() {
     loadUserSettings();
@@ -329,7 +361,17 @@ function filterAndSortImages() {
             
             case 'name-desc':
                 return (b.title || '').localeCompare(a.title || '');
-            
+
+            case 'date-asc':
+                aValue = getDateForSort(a, majorImagesById, majorImagesByGroupId);
+                bValue = getDateForSort(b, majorImagesById, majorImagesByGroupId);
+                return aValue - bValue;
+
+            case 'date-desc':
+                aValue = getDateForSort(a, majorImagesById, majorImagesByGroupId);
+                bValue = getDateForSort(b, majorImagesById, majorImagesByGroupId);
+                return bValue - aValue;
+
             default:
                 return 0;
         }
@@ -347,6 +389,18 @@ function getRankingForSort(img, majorImagesById, majorImagesByGroupId) {
         return majorImagesById[img.majorImageId]?.ranking || 0;
     } else if (img.groupId && majorImagesByGroupId[img.groupId]) {
         return majorImagesByGroupId[img.groupId].ranking || 0;
+    }
+    return 0;
+}
+
+// Helper function to get date for sorting
+function getDateForSort(img, majorImagesById, majorImagesByGroupId) {
+    if (img.isMajor !== false) {
+        return img.date ? new Date(img.date).getTime() : 0;
+    } else if (img.majorImageId) {
+        return majorImagesById[img.majorImageId]?.date ? new Date(majorImagesById[img.majorImageId].date).getTime() : 0;
+    } else if (img.groupId && majorImagesByGroupId[img.groupId]) {
+        return majorImagesByGroupId[img.groupId].date ? new Date(majorImagesByGroupId[img.groupId].date).getTime() : 0;
     }
     return 0;
 }
@@ -441,6 +495,9 @@ function createImageGroup(majorImage, subsidiaries) {
             <div class="group-tags">
                 ${(majorImage.tags || []).map(tag => `<span class="group-tag">${tag}</span>`).join('')}
             </div>
+            <div class="group-date" style="font-size: 0.8rem; opacity: 0.8; margin: 5px 0;">
+                Added ${formatDate(majorImage.date)}
+            </div>
             <button class="expand-group-btn" onclick="toggleGroup(this)">
                 ${subsidiaries.length} more
             </button>
@@ -492,8 +549,11 @@ function createMajorImage(img) {
         <div class="caption">
             ${img.title}
             <div>${img.description || ''}</div>
-            ${img.width || img.height ? 
-                `<div style="margin-top: 5px; font-size: 0.7rem; opacity: 0.8;">
+            <div class="image-date" style="margin-top: 5px; font-size: 0.7rem; opacity: 0.8; color: var(--secondary-color);">
+                Added ${formatDate(img.date)}
+            </div>
+            ${img.width || img.height ?
+                `<div style="margin-top: 2px; font-size: 0.7rem; opacity: 0.6;">
                     ${img.width || 'auto'} × ${img.height || 'auto'}
                 </div>` : ''
             }
@@ -557,8 +617,11 @@ function createStandaloneImage(img) {
             <div class="image-tags">
                 ${(img.tags || []).map(tag => `<span class="image-tag">${tag}</span>`).join('')}
             </div>
-            ${img.width || img.height ? 
-                `<div style="margin-top: 5px; font-size: 0.7rem; opacity: 0.8;">
+            <div class="image-date" style="margin-top: 5px; font-size: 0.7rem; opacity: 0.8; color: var(--secondary-color);">
+                Added ${formatDate(img.date)}
+            </div>
+            ${img.width || img.height ?
+                `<div style="margin-top: 2px; font-size: 0.7rem; opacity: 0.6;">
                     ${img.width || 'auto'} × ${img.height || 'auto'}
                 </div>` : ''
             }
@@ -621,7 +684,15 @@ async function browseForJsonFile() {
             try {
                 const data = await ipcRenderer.invoke('read-json-file', filePath);
                 if (data.images && Array.isArray(data.images)) {
-                    images = data.images;
+                    // Add date field to new images (existing images keep their original date if present)
+                    const now = new Date().toISOString();
+                    images = data.images.map(img => {
+                        if (!img.date) {
+                            return { ...img, date: now };
+                        }
+                        return img;
+                    });
+
                     selectedTags = [];
                     filterAndRender();
                     showToast(`Loaded ${images.length} images from ${fileName}`, 'success');
@@ -685,26 +756,34 @@ function importGalleryData() {
     input.onchange = function(event) {
         const file = event.target.files[0];
         if (!file) return;
-        
+
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
                 const data = JSON.parse(e.target.result);
                 if (data.images && Array.isArray(data.images)) {
-                    images = data.images;
+                    // Add date field to new images (existing images keep their original date if present)
+                    const now = new Date().toISOString();
+                    images = data.images.map(img => {
+                        if (!img.date) {
+                            return { ...img, date: now };
+                        }
+                        return img;
+                    });
+
                     selectedTags = [];
                     currentJsonFile = file.name;
-                    
+
                     // Reset sort to default
                     document.getElementById('sort-select').value = 'ranking-desc';
                     currentSort = 'ranking-desc';
-                    
+
                     // Update UI components
                     filterAndSortImages();
                     renderTagCloud();
                     renderGallery();
                     saveUserSettings();
-                    
+
                     showToast(`Successfully imported ${images.length} images`, 'success');
                 } else {
                     showToast('Invalid file format. Please select a valid gallery JSON file.', 'error');
