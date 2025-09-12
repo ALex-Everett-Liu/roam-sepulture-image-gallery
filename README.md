@@ -13,7 +13,7 @@ A powerful, desktop-based image gallery application built with Electron, featuri
 
 ### 🔧 Data Management
 - **Multiple Data Sources**: Support for various JSON data formats
-- **Import/Export**: Easy data import and export functionality  
+- **Import/Export**: Easy data import and export functionality
 - **File Browser Integration**: Native file picker for JSON files
 - **Settings Persistence**: User preferences saved automatically
 - **Real-time Data Loading**: Dynamic JSON file loading with error handling
@@ -34,7 +34,7 @@ A powerful, desktop-based image gallery application built with Electron, featuri
 ### Setup
 1. **Clone or download the application**
    ```bash
-   cd Q:\Coding-2025\roam-sepulture-image-gallery
+   cd roam-sepulture-image-gallery
    ```
 
 2. **Install dependencies**
@@ -67,13 +67,13 @@ The application can load images from JSON files in several formats:
 
 #### JSON File Locations
 - `data/` directory (primary location)
-- `temp/` directory (for compatibility)  
+- `temp/` directory (for compatibility)
 - Root directory
 - Custom file paths via file browser
 
 #### Included Sample Data
 - `images_data_groups.json` - Demonstrates grouping features
-- `images_data_dcim_01.json` - Real-world example with Chinese text
+- `images_data_dcim_01.json` - Real-world example
 - `images_data_sample_02.json` - Simple standalone images
 
 ### Controls & Navigation
@@ -90,7 +90,7 @@ The application can load images from JSON files in several formats:
 - **File Browser**: Use native file picker
 - **Sample Data**: Reset to built-in examples
 
-#### Management Functions  
+#### Management Functions
 - **Refresh**: Reload current data source
 - **Export**: Save current gallery data as JSON
 - **Import**: Load new JSON data from file
@@ -102,7 +102,7 @@ The application can load images from JSON files in several formats:
 - **Click & Drag**: Pan when zoomed in
 - **Keyboard Shortcuts**:
   - `+/=`: Zoom in
-  - `-/_`: Zoom out  
+  - `-/_`: Zoom out
   - `0`: Reset zoom
   - `Escape`: Close fullscreen
 
@@ -142,13 +142,13 @@ The application can load images from JSON files in several formats:
 - `title` (string): Display title
 - `isMajor` (boolean): Whether image is a major/standalone image
 
-#### Optional Properties  
+#### Optional Properties
 - `description` (string): Detailed description
 - `src` (string): Image file path or URL
 - `ranking` (number): Numerical ranking for sorting
 - `tags` (array): Array of tag strings
 - `width` (string): CSS width value
-- `height` (string): CSS height value  
+- `height` (string): CSS height value
 - `gridSpan` (number): Grid columns to span (1-4)
 - `groupId` (string): Group identifier for related images
 - `majorImageId` (number): Reference to major image (for subsidiaries)
@@ -161,7 +161,7 @@ The application can load images from JSON files in several formats:
 - Can have `groupId` for grouping
 - Include full metadata (ranking, tags, description)
 
-#### Subsidiary Images  
+#### Subsidiary Images
 - Part of a group, displayed under major image
 - Must have `isMajor: false`
 - Require `groupId` and optionally `majorImageId`
@@ -178,7 +178,7 @@ The application follows a modern Electron architecture:
 
 ```
 ┌─────────────────────────────────────────┐
-│             Electron App                │
+│             Electron App                       │
 ├─────────────────────────────────────────┤
 │  Main Process (main.js)                 │
 │  ├── Window Management                  │
@@ -205,7 +205,7 @@ The application follows a modern Electron architecture:
 - Handles IPC communication with renderer
 - Provides native file dialogs and system integration
 
-#### Renderer Process (`renderer.js`)  
+#### Renderer Process (`renderer.js`)
 - Manages the user interface and user interactions
 - Handles image gallery rendering and filtering
 - Implements fullscreen viewer and settings management
@@ -279,7 +279,7 @@ roam-sepulture-image-gallery/
 - Verify JSON syntax with the Diagnose function
 - Ensure file is in a supported location
 
-#### Images Not Displaying  
+#### Images Not Displaying
 - Verify image paths in JSON data
 - Check if image files exist at specified paths
 - Ensure image URLs are accessible
@@ -299,7 +299,7 @@ roam-sepulture-image-gallery/
 
 ### Development Guidelines
 1. Follow existing code style and patterns
-2. Test changes with multiple data sources  
+2. Test changes with multiple data sources
 3. Ensure responsive design works on different screen sizes
 4. Add appropriate error handling and user feedback
 
