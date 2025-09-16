@@ -106,7 +106,8 @@
                 <p><strong>2. Browse Files:</strong> Use the file browser to select JSON files from your system</p>
                 <p><strong>3. Image Groups:</strong> Create collections with major images and subsidiary images</p>
                 <p><strong>4. Import/Export:</strong> Use the buttons above to manage your gallery data</p>
-                <p><strong>5. Structure:</strong> Each image needs: title, description, src (for major images), and display properties</p>
+                <p><strong>5. Structure:</strong> Each image/video needs: title, description, src (for major images), and display properties</p>
+                <p><strong>6. Video Support:</strong> Videos (.mp4, .webm, .mov, .avi, etc.) are automatically detected and displayed with controls</p>
                 
                 <details class="json-example">
                     <summary>JSON Format Example</summary>
@@ -128,6 +129,19 @@
     },
     {
       "id": 2,
+      "title": "Nature Video",
+      "description": "Beautiful nature video with wildlife",
+      "src": "assets/nature.mp4",
+      "ranking": 8.5,
+      "tags": ["nature", "video", "wildlife"],
+      "width": "1200px",
+      "height": "600px", 
+      "gridSpan": 4,
+      "isMajor": true,
+      "groupId": "group-2"
+    },
+    {
+      "id": 3,
       "title": "Sunset Beach - Wide Shot",
       "src": "path/to/subsidiary1.jpg",
       "width": "400px",
@@ -167,7 +181,9 @@
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        <img class="fullscreen-image" id="fullscreen-image" src="" alt="">
+        <div class="fullscreen-media-container">
+            <img class="fullscreen-image" id="fullscreen-image" src="" alt="">
+        </div>
         <div class="zoom-indicator" id="zoom-indicator">100%</div>
     </div>
 

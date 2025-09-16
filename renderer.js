@@ -39,6 +39,18 @@ let isLoading = false;
 let currentJsonFile = 'images_data_groups.json';
 let availableFiles = [];
 
+// Video support utility functions
+function isVideoFile(src) {
+    if (!src) return false;
+    const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.ogg', '.ogv'];
+    const extension = src.toLowerCase().substring(src.lastIndexOf('.'));
+    return videoExtensions.includes(extension);
+}
+
+function getMediaType(src) {
+    return isVideoFile(src) ? 'video' : 'image';
+}
+
 // Utility function to format dates
 function formatDate(dateString) {
     if (!dateString) return 'Unknown';
@@ -540,12 +552,17 @@ function createMajorImage(img) {
     const item = document.createElement('div');
     item.className = classes;
     
-    const imgHtml = img.src ? 
-        `<img src="${img.src}" alt="${img.title}" onclick="openFullscreen('${img.src}', '${img.title}')" loading="lazy" style="width: 100%; height: ${img.height || 'auto'}; object-fit: cover;">` : 
-        `<div class="placeholder" onclick="openFullscreen(null, '${img.title}')" style="height: ${img.height || '200px'};">${img.title}</div>`;
+    const mediaHtml = img.src ? 
+        (isVideoFile(img.src) ? 
+            `<video controls onclick="openFullscreen('${img.src}', '${img.title}', 'video')" style="width: 100%; height: ${img.height || 'auto'}; object-fit: cover;" preload="metadata">
+                <source src="${img.src}" type="video/${img.src.substring(img.src.lastIndexOf('.') + 1)}">
+                Your browser does not support the video tag.
+            </video>` :
+            `<img src="${img.src}" alt="${img.title}" onclick="openFullscreen('${img.src}', '${img.title}', 'image')" loading="lazy" style="width: 100%; height: ${img.height || 'auto'}; object-fit: cover;">`) : 
+        `<div class="placeholder" onclick="openFullscreen(null, '${img.title}', 'placeholder')" style="height: ${img.height || '200px'};">${img.title}</div>`;
     
     item.innerHTML = `
-        ${imgHtml}
+        ${mediaHtml}
         <div class="caption">
             ${img.title}
             <div>${img.description || ''}</div>
@@ -578,12 +595,17 @@ function createSubsidiaryImage(img, majorImage) {
 
     const displayTitle = img.title || majorImage.title;
     
-    const imgHtml = img.src ? 
-        `<img src="${img.src}" alt="${displayTitle}" onclick="openFullscreen('${img.src}', '${displayTitle}')" loading="lazy" style="width: 100%; height: ${img.height || '120px'}; object-fit: cover;">` : 
-        `<div class="placeholder" onclick="openFullscreen(null, '${displayTitle}')" style="height: ${img.height || '120px'};">${displayTitle}</div>`;
+    const mediaHtml = img.src ? 
+        (isVideoFile(img.src) ? 
+            `<video controls onclick="openFullscreen('${img.src}', '${displayTitle}', 'video')" style="width: 100%; height: ${img.height || '120px'}; object-fit: cover;" preload="metadata">
+                <source src="${img.src}" type="video/${img.src.substring(img.src.lastIndexOf('.') + 1)}">
+                Your browser does not support the video tag.
+            </video>` :
+            `<img src="${img.src}" alt="${displayTitle}" onclick="openFullscreen('${img.src}', '${displayTitle}', 'image')" loading="lazy" style="width: 100%; height: ${img.height || '120px'}; object-fit: cover;">`) : 
+        `<div class="placeholder" onclick="openFullscreen(null, '${displayTitle}', 'placeholder')" style="height: ${img.height || '120px'};">${displayTitle}</div>`;
 
     item.innerHTML = `
-        ${imgHtml}
+        ${mediaHtml}
         <div class="subsidiary-label">${displayTitle}</div>
     `;
 
@@ -604,12 +626,17 @@ function createStandaloneImage(img) {
     const item = document.createElement('div');
     item.className = classes;
     
-    const imgHtml = img.src ? 
-        `<img src="${img.src}" alt="${img.title}" onclick="openFullscreen('${img.src}', '${img.title}')" loading="lazy" style="width: 100%; height: ${img.height || 'auto'}; object-fit: cover;">` : 
-        `<div class="placeholder" onclick="openFullscreen(null, '${img.title}')" style="height: ${img.height || '200px'};">${img.title}</div>`;
+    const mediaHtml = img.src ? 
+        (isVideoFile(img.src) ? 
+            `<video controls onclick="openFullscreen('${img.src}', '${img.title}', 'video')" style="width: 100%; height: ${img.height || 'auto'}; object-fit: cover;" preload="metadata">
+                <source src="${img.src}" type="video/${img.src.substring(img.src.lastIndexOf('.') + 1)}">
+                Your browser does not support the video tag.
+            </video>` :
+            `<img src="${img.src}" alt="${img.title}" onclick="openFullscreen('${img.src}', '${img.title}', 'image')" loading="lazy" style="width: 100%; height: ${img.height || 'auto'}; object-fit: cover;">`) : 
+        `<div class="placeholder" onclick="openFullscreen(null, '${img.title}', 'placeholder')" style="height: ${img.height || '200px'};">${img.title}</div>`;
     
     item.innerHTML = `
-        ${imgHtml}
+        ${mediaHtml}
         <div class="ranking">⭐ ${img.ranking}</div>
         <div class="caption">
             ${img.title}
@@ -871,14 +898,52 @@ let startY = 0;
 let translateX = 0;
 let translateY = 0;
 
-function openFullscreen(src, title) {
+function openFullscreen(src, title, mediaType = 'image') {
     if (!src) return;
     
     const viewer = document.getElementById('fullscreen-viewer');
-    const image = document.getElementById('fullscreen-image');
+    const mediaContainer = document.querySelector('.fullscreen-media-container');
     
-    image.src = src;
-    image.alt = title;
+    // Clear existing content
+    mediaContainer.innerHTML = '';
+    
+    if (mediaType === 'video' || isVideoFile(src)) {
+        // Create video element
+        const video = document.createElement('video');
+        video.id = 'fullscreen-video';
+        video.className = 'fullscreen-media';
+        video.src = src;
+        video.controls = true;
+        video.style.cssText = `
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            display: block;
+            margin: auto;
+            transform-origin: center center;
+            cursor: grab;
+        `;
+        mediaContainer.appendChild(video);
+    } else {
+        // Create image element
+        const image = document.createElement('img');
+        image.id = 'fullscreen-image';
+        image.className = 'fullscreen-media';
+        image.src = src;
+        image.alt = title;
+        image.style.cssText = `
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            display: block;
+            margin: auto;
+            transform-origin: center center;
+            cursor: grab;
+        `;
+        mediaContainer.appendChild(image);
+    }
     
     resetZoom();
     viewer.classList.add('active');
@@ -912,8 +977,10 @@ function resetZoom() {
 }
 
 function updateTransform() {
-    const image = document.getElementById('fullscreen-image');
-    image.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+    const media = document.getElementById('fullscreen-image') || document.getElementById('fullscreen-video');
+    if (media) {
+        media.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+    }
 }
 
 function showZoomIndicator() {
@@ -937,11 +1004,12 @@ document.getElementById('fullscreen-viewer').addEventListener('wheel', (e) => {
 });
 
 // Mouse drag functionality
-const fullscreenImage = document.getElementById('fullscreen-image');
 const viewer = document.getElementById('fullscreen-viewer');
 
-fullscreenImage.addEventListener('mousedown', (e) => {
-    if (currentScale > 1) {
+// Use event delegation for dynamic media elements
+viewer.addEventListener('mousedown', (e) => {
+    const media = e.target;
+    if ((media.id === 'fullscreen-image' || media.id === 'fullscreen-video') && currentScale > 1) {
         isDragging = true;
         startX = e.clientX - translateX;
         startY = e.clientY - translateY;

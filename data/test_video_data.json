@@ -1,0 +1,59 @@
+{
+  "images": [
+    {
+      "id": 111,
+      "title": "aaa",
+      "description": "bbb", 
+      "src": "assets/aaa.mp4",
+      "ranking": 5,
+      "tags": ["aaa", "bbb"],
+      "width": "1200px",
+      "gridSpan": 4,
+      "isMajor": true,
+      "groupId": "group-1"
+    },
+    {
+      "id": 1,
+      "title": "Sample Image for Comparison", 
+      "description": "A sample image to show mixed media support",
+      "src": "https://picsum.photos/600/400",
+      "ranking": 8.5,
+      "tags": ["sample", "image", "test"],
+      "width": "600px",
+      "height": "400px",
+      "gridSpan": 2,
+      "isMajor": true,
+      "groupId": "group-2"
+    },
+    {
+      "id": 2,
+      "title": "Another Video Example",
+      "description": "Example of different video format",
+      "src": "assets/example.webm",
+      "ranking": 7.8,
+      "tags": ["video", "example", "webm"],
+      "width": "800px",
+      "height": "450px",
+      "gridSpan": 3,
+      "isMajor": true
+    },
+    {
+      "id": 3,
+      "title": "Subsidiary Video",
+      "src": "assets/subsidiary.mp4", 
+      "width": "400px",
+      "height": "300px",
+      "gridSpan": 2,
+      "isMajor": false,
+      "groupId": "group-1",
+      "majorImageId": 111
+    }
+  ],
+  "metadata": {
+    "version": "2.1",
+    "description": "Test data with video support",
+    "totalImages": 4,
+    "totalGroups": 2,
+    "features": ["video-support", "image-groups", "major-subsidiary", "mixed-media"]
+  }
+}

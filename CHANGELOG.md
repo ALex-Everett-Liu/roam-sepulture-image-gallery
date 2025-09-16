@@ -5,6 +5,50 @@ All notable changes to the Roam Sepulture Image Gallery project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2025-01-26
+
+### Added
+- **Complete video format support**
+  - Auto-detection of video files (.mp4, .webm, .mov, .avi, .mkv, .ogg, .ogv)
+  - Native HTML5 video elements with full controls (play/pause, volume, timeline)
+  - Mixed media gallery support (videos and images in same collection)
+  - Video compatibility with all existing features (grouping, filtering, sorting)
+- **Enhanced media rendering system**
+  - `isVideoFile()` utility function for automatic format detection
+  - Updated `createMajorImage()`, `createSubsidiaryImage()`, and `createStandaloneImage()` functions
+  - Dynamic media element creation based on file extension
+  - Proper video MIME type handling and fallback support
+- **Fullscreen video viewer**
+  - Videos maintain native controls in fullscreen mode
+  - Zoom and pan functionality works for both videos and images
+  - Mouse drag support unified for all media types
+  - Dynamic media container system for flexible content display
+- **Documentation and examples**
+  - Updated JSON format examples to include video entries
+  - Added video support information to user instructions
+  - Created test data file (`test_video_data.json`) with video examples
+  - Enhanced format notes to clarify mixed media capabilities
+
+### Technical Implementation
+- **Media type detection system**
+  - File extension-based video format recognition
+  - `getMediaType()` utility for determining content type
+  - Support for all major video formats and codecs
+- **Rendering engine updates**
+  - Unified media rendering pipeline for images and videos
+  - Dynamic HTML element creation (`<img>` vs `<video>`)
+  - Preserved all existing styling and layout capabilities
+- **Fullscreen viewer enhancements**
+  - Dynamic media container with automatic content switching
+  - Event delegation for dynamically created video elements
+  - Maintained zoom/pan controls for video content
+  - Cross-media-type cursor and interaction handling
+
+### Sample Data
+- Added `test_video_data.json` with comprehensive video examples
+- Demonstrates major videos, subsidiary videos, and mixed media groups
+- Includes various video formats and grid spanning configurations
+
 ## [0.1.1] - 2025-01-26
 
 ### Added
