@@ -643,20 +643,36 @@ function renderGallery() {
                 if (!group.rendered) {
                     const groupElement = createImageGroup(group.major, group.subsidiaries);
                     
-                    // Add grid span classes to the group container
-                    if (group.major.gridSpan) {
-                        if (group.major.gridSpan === 2) groupElement.classList.add('wide');
-                        else if (group.major.gridSpan === 3) groupElement.classList.add('extra-wide');
-                        else if (group.major.gridSpan >= 4) groupElement.classList.add('full-width');
+                    // 图片组使用原有的跨列逻辑（适配主画廊的auto-fit网格）
+                    const majorImg = group.major;
+                    if (majorImg.width && majorImg.width !== '100%' && majorImg.width !== 'auto') {
+                        // 使用固定宽度
+                        groupElement.style.width = majorImg.width;
+                        groupElement.style.gridColumn = 'auto';
+                    } else if (majorImg.gridSpan) {
+                        // 恢复原有的类映射方式（适配auto-fit网格）
+                        if (majorImg.gridSpan === 2) groupElement.classList.add('wide');
+                        else if (majorImg.gridSpan === 3) groupElement.classList.add('extra-wide');
+                        else if (majorImg.gridSpan >= 4) groupElement.classList.add('full-width');
                     }
                     
                     gallery.appendChild(groupElement);
                     group.rendered = true;
                 }
             } else {
-                // This is a standalone major image
+                // This is a standalone major image - 创建12栏网格容器
+                const gridContainer = document.createElement('div');
+                gridContainer.className = 'standalone-grid-container';
+                gridContainer.style.cssText = `
+                    display: grid;
+                    grid-template-columns: repeat(12, 1fr);
+                    gap: 20px;
+                    grid-column: 1 / -1;
+                `;
+                
                 const item = createStandaloneImage(img);
-                gallery.appendChild(item);
+                gridContainer.appendChild(item);
+                gallery.appendChild(gridContainer);
             }
         }
     });
@@ -710,18 +726,18 @@ function createImageGroup(majorImage, subsidiaries) {
 function createMajorImage(img) {
     let classes = 'gallery-item';
     
-    // Add custom grid span classes
-    if (img.gridSpan) {
-        if (img.gridSpan === 2) classes += ' wide';
-        else if (img.gridSpan === 3) classes += ' extra-wide';
-        else if (img.gridSpan >= 4) classes += ' full-width';
-    }
-
     const container = document.createElement('div');
     container.className = 'major-image-container';
     
     const item = document.createElement('div');
     item.className = classes;
+    
+    // 组内主图不使用gridSpan，由组容器控制宽度
+    if (img.width && img.width !== '100%' && img.width !== 'auto') {
+        // 使用固定宽度
+        item.style.width = img.width;
+    }
+    // 组内主图不设置gridColumn，让它填满组容器
     
     const mediaHtml = img.src ? 
         (isVideoFile(img.src) ? 
@@ -757,7 +773,17 @@ function createSubsidiaryImage(img, majorImage) {
     const item = document.createElement('div');
     item.className = 'subsidiary-item';
 
-    // Apply grid span classes
+    // 优先使用 width，如果没有则使用 gridSpan
+    if (img.width && img.width !== '100%' && img.width !== 'auto') {
+        // 使用固定宽度
+        item.style.width = img.width;
+        item.style.gridColumn = 'auto'; // 不按栅格布局
+    } else if (img.gridSpan) {
+        // 使用栅格布局（副图是12栏系统）
+        const span = Math.max(1, Math.min(12, img.gridSpan));
+        item.style.gridColumn = `span ${span}`;
+    }
+    // 保留原有的 CSS 类作为回退
     if (img.gridSpan) {
         if (img.gridSpan === 2) item.classList.add('wide');
         else if (img.gridSpan === 3) item.classList.add('extra-wide');
@@ -787,15 +813,19 @@ function createSubsidiaryImage(img, majorImage) {
 function createStandaloneImage(img) {
     let classes = 'gallery-item';
     
-    // Add custom grid span classes
-    if (img.gridSpan) {
-        if (img.gridSpan === 2) classes += ' wide';
-        else if (img.gridSpan === 3) classes += ' extra-wide';
-        else if (img.gridSpan >= 4) classes += ' full-width';
-    }
-
     const item = document.createElement('div');
     item.className = classes;
+    
+    // 优先使用 width，如果没有则使用 gridSpan
+    if (img.width && img.width !== '100%' && img.width !== 'auto') {
+        // 使用固定宽度
+        item.style.width = img.width;
+        item.style.gridColumn = 'auto'; // 不按栅格布局
+    } else {
+        // 使用栅格布局
+        const span = img.gridSpan || 4; // 默认4栏
+        item.style.gridColumn = `span ${Math.max(1, Math.min(12, span))}`;
+    }
     
     const mediaHtml = img.src ? 
         (isVideoFile(img.src) ? 
