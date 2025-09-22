@@ -480,6 +480,9 @@ h1 {
 .major-image-container {
     padding: 15px;
     background: white;
+    /* 确保固定宽度主图不被组容器限制 */
+    overflow: visible;
+    min-width: 0; /* 允许收缩 */
 }
 
 /* Image group width control */

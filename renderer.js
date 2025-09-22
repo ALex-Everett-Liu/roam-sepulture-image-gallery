@@ -643,14 +643,17 @@ function renderGallery() {
                 if (!group.rendered) {
                     const groupElement = createImageGroup(group.major, group.subsidiaries);
                     
-                    // 图片组使用原有的跨列逻辑（适配主画廊的auto-fit网格）
+                    // 图片组宽度控制：优先考虑主图的固定宽度需求
                     const majorImg = group.major;
                     if (majorImg.width && majorImg.width !== '100%' && majorImg.width !== 'auto') {
-                        // 使用固定宽度
-                        groupElement.style.width = majorImg.width;
+                        // 主图有固定宽度时，组容器适应主图宽度
+                        groupElement.style.width = 'fit-content';
+                        groupElement.style.minWidth = '250px'; // 保证最小宽度
+                        groupElement.style.maxWidth = '100%'; // 不超过父容器
                         groupElement.style.gridColumn = 'auto';
+                        groupElement.style.justifySelf = 'start'; // 左对齐，不拉伸
                     } else if (majorImg.gridSpan) {
-                        // 恢复原有的类映射方式（适配auto-fit网格）
+                        // 没有固定宽度时，使用gridSpan控制组宽度
                         if (majorImg.gridSpan === 2) groupElement.classList.add('wide');
                         else if (majorImg.gridSpan === 3) groupElement.classList.add('extra-wide');
                         else if (majorImg.gridSpan >= 4) groupElement.classList.add('full-width');
@@ -732,12 +735,17 @@ function createMajorImage(img) {
     const item = document.createElement('div');
     item.className = classes;
     
-    // 组内主图不使用gridSpan，由组容器控制宽度
+    // 主图宽度控制：固定宽度优先
     if (img.width && img.width !== '100%' && img.width !== 'auto') {
-        // 使用固定宽度
-        item.style.width = img.width;
+        // 使用固定宽度 - 设置在容器上确保不被组容器限制
+        container.style.width = img.width;
+        container.style.maxWidth = 'none'; // 移除最大宽度限制
+        item.style.width = '100%'; // 主图填满容器
+    } else {
+        // 没有固定宽度时，填满组容器
+        container.style.width = '100%';
+        item.style.width = '100%';
     }
-    // 组内主图不设置gridColumn，让它填满组容器
     
     const mediaHtml = img.src ? 
         (isVideoFile(img.src) ? 
