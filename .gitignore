@@ -109,3 +109,7 @@ output/
 # User data
 user-data/
 settings.json
+
+# Privacy data files - do not commit to public repo
+data/images_data_dcim_01.json
+data/images_data_re_01.json
