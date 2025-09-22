@@ -5,6 +5,101 @@ All notable changes to the Roam Sepulture Image Gallery project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2025-09-22
+
+### Major Changes - Layout System Overhaul
+- **Complete removal of gridSpan system**
+  - Eliminated complex 12-column grid calculations and gridSpan-to-CSS class mappings
+  - Replaced with intuitive direct `width` and `height` property control
+  - Simplified codebase by removing hundreds of lines of grid-related logic
+  - No more confusing gridSpan values (1, 2, 3, 4) - now just specify exact dimensions
+- **Flexbox-based layout system**
+  - Migrated from CSS Grid to Flexbox for main gallery (`display: flex; flex-wrap: wrap`)
+  - Images now arrange naturally based on their specified dimensions
+  - Eliminated dependency on complex responsive grid breakpoints
+  - More predictable and intuitive layout behavior
+
+### Enhanced Image Aspect Ratio Handling
+- **Intelligent aspect ratio preservation**
+  - When only `width` is specified, images automatically maintain original aspect ratios
+  - Fixed CSS bug where subsidiary images were forced to 120px height regardless of settings
+  - Removed hardcoded height constraints from `.subsidiary-item img` and `.placeholder` elements
+  - Images now scale naturally when container dimensions change
+- **Improved height handling**
+  - `height: auto` applied to all media elements when height not explicitly specified
+  - Added `min-height` fallbacks to prevent images from becoming too small
+  - Better handling of placeholder elements with natural aspect ratios
+
+### Simplified Configuration
+- **Streamlined JSON format**
+  - `gridSpan` field no longer needed - removed from all sample data
+  - Direct pixel values recommended: `"width": "400px"` instead of grid calculations
+  - Cleaner, more intuitive configuration: see exactly what dimensions you're setting
+  - Backward compatible: existing JSON files continue to work
+- **Manual precision control**
+  - Every image size is explicitly controlled via `width` and `height` properties
+  - No more guessing what `gridSpan: 3` will look like on different screen sizes
+  - Pixel-perfect control over gallery layout and appearance
+
+### Code Quality Improvements
+- **Massive code simplification**
+  - Removed complex `createStandaloneImage()` 12-column grid container logic
+  - Simplified `createMajorImage()` and `createSubsidiaryImage()` functions
+  - Eliminated CSS classes: `.wide`, `.extra-wide`, `.full-width`, and grid-column span rules
+  - Reduced CSS file size by removing redundant responsive grid media queries
+- **Enhanced maintainability**
+  - Clearer code paths with direct dimension application
+  - Removed conditionals for gridSpan-to-class mapping
+  - Unified approach to image sizing across all image types
+  - Easier debugging and modification of layout behavior
+
+### User Experience Benefits
+- **Predictable layout behavior**
+  - What you set in JSON is exactly what appears on screen
+  - No more calculations needed to understand how `gridSpan` translates to actual width
+  - Consistent behavior across all screen sizes and device types
+- **Better wide-screen utilization**
+  - Images can be sized precisely for optimal display on any screen width
+  - No artificial constraints from predefined grid column counts
+  - Natural flexbox wrapping creates optimal layouts automatically
+
+### Technical Implementation
+- **CSS architecture overhaul**
+  ```css
+  /* Before: Complex grid system */
+  #gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(250px, 20vw), 1fr));
+  }
+  
+  /* After: Simple flexbox */
+  #gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  ```
+- **JavaScript simplification**
+  ```javascript
+  // Before: Complex gridSpan logic
+  if (img.gridSpan === 2) item.classList.add('wide');
+  else if (img.gridSpan === 3) item.classList.add('extra-wide');
+  
+  // After: Direct dimension control
+  if (img.width) item.style.width = img.width;
+  if (img.height) item.style.height = img.height;
+  ```
+
+### Migration Guide
+- **Existing users**: No action required - all existing JSON files work without modification
+- **New configurations**: Use direct pixel values instead of gridSpan for more precise control
+- **Recommended approach**: Specify exact `width` values, let `height` auto-adjust for aspect ratio
+
+### Breaking Changes
+- None for end users - full backward compatibility maintained
+- Developers: `gridSpan`-related CSS classes removed, but JSON `gridSpan` fields still accepted (ignored)
+
 ## [0.1.4] - 2025-09-22
 
 ### Added

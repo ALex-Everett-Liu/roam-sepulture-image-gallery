@@ -151,7 +151,7 @@
                 <p><strong>3. Image Groups:</strong> Create collections with major images and subsidiary images</p>
                 <p><strong>4. Import/Export:</strong> Use the buttons above to manage your gallery data</p>
                 <p><strong>5. Structure:</strong> Each image/video needs: title, description, src (for major images), and display properties</p>
-                <p><strong>6. Width Priority:</strong> If 'width' is set (and not '100%' or 'auto'), it takes priority over 'gridSpan' for precise sizing</p>
+                <p><strong>6. Manual Sizing:</strong> Each image uses direct 'width' and 'height' properties for precise control - no complex grid system</p>
                 <p><strong>7. Video Support:</strong> Videos (.mp4, .webm, .mov, .avi, etc.) are automatically detected and displayed with controls</p>
                 
                 <details class="json-example">
@@ -167,7 +167,6 @@
       "tags": ["sunset", "beach", "ocean"],
       "width": "600px",
       "height": "400px",
-      "gridSpan": 2,
       "isMajor": true,
       "groupId": "group-1",
       "date": "2025-01-26T16:45:00.000Z"
@@ -180,8 +179,7 @@
       "ranking": 8.5,
       "tags": ["nature", "video", "wildlife"],
       "width": "1200px",
-      "height": "600px", 
-      "gridSpan": 4,
+      "height": "600px",
       "isMajor": true,
       "groupId": "group-2"
     },
@@ -191,7 +189,6 @@
       "src": "path/to/subsidiary1.jpg",
       "width": "400px",
       "height": "150px",
-      "gridSpan": 2,
       "isMajor": false,
       "groupId": "group-1",
       "majorImageId": 1
@@ -200,11 +197,11 @@
 }</pre>
                     <div class="format-notes">
                         <strong>Major Images:</strong> Include ranking, tags, description (used for filtering/sorting)<br>
-                        <strong>Subsidiary Images:</strong> Inherit metadata from major image, only need src, width, height, gridSpan<br>
+                        <strong>Subsidiary Images:</strong> Inherit metadata from major image, only need src, width, height<br>
                         <strong>Standalone Images:</strong> Set isMajor: true without groupId for individual display<br>
                         <strong>Date Field:</strong> Automatically added when importing new images (ISO 8601 format)<br>
-                        <strong>Width Priority:</strong> If 'width' is specified (not '100%'/'auto'), it overrides 'gridSpan' for fixed sizing<br>
-                        <strong>Grid System:</strong> Main gallery uses 12-column grid; gridSpan 1-12 controls relative width (1=1/12, 6=1/2, 12=full width)<br>
+                        <strong>Manual Layout:</strong> Each image uses 'width' and 'height' properties for exact sizing control<br>
+                        <strong>Flexbox System:</strong> Gallery uses flexible layout - images arrange naturally based on their specified sizes<br>
                         <strong>Sorting:</strong> Can sort by date added (oldest/newest first) in addition to ranking and name
                     </div>
                 </details>

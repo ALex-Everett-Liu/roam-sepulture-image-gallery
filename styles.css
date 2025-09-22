@@ -203,38 +203,7 @@ h1 {
     height: 200px;
 }
 
-/* Custom sizing classes */
-.gallery-item.tall {
-    grid-row: span 2;
-}
-
-.gallery-item.wide {
-    grid-column: span 2;
-}
-
-.gallery-item.extra-wide {
-    grid-column: span 3;
-}
-
-.gallery-item.full-width {
-    grid-column: 1 / -1;
-}
-
-.gallery-item.mini {
-    max-width: 150px;
-}
-
-.gallery-item.small {
-    max-width: 200px;
-}
-
-.gallery-item.medium {
-    max-width: 350px;
-}
-
-.gallery-item.large {
-    max-width: 500px;
-}
+/* 所有尺寸完全由width/height手动控制，不需要预定义类 */
 
 .gallery-item .caption {
     position: absolute;
@@ -368,39 +337,31 @@ h1 {
     font-size: 0.75rem;
 }
 
-/* Subsidiary gallery: use a 12-column grid for stable relative widths */
+/* Subsidiary gallery: 使用flexbox，完全依赖手动width/height */
 .subsidiary-gallery {
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     padding: 15px;
     background: white;
+    align-items: flex-start; /* 顶部对齐 */
 }
 
-/* Width classes for subsidiary items */
-.subsidiary-item.wide {
-    grid-column: span 4;          /* ~1/3 width */
-}
+/* 副图尺寸完全由width/height手动控制 */
 
-.subsidiary-item.extra-wide {
-    grid-column: span 6;          /* 1/2 width (fix: was too narrow before) */
-}
-
-.subsidiary-item.full-width {
-    grid-column: 1 / -1;          /* full width (kept) */
-}
-
-/* Responsive column counts for subsidiary gallery */
-@media (max-width: 1200px) {
-    .subsidiary-gallery { grid-template-columns: repeat(8, 1fr); }
-}
-
+/* 副图响应式：小屏设备调整间距和布局 */
 @media (max-width: 768px) {
-    .subsidiary-gallery { grid-template-columns: repeat(6, 1fr); }
+    .subsidiary-gallery {
+        gap: 8px;
+        padding: 10px;
+    }
 }
 
 @media (max-width: 480px) {
-    .subsidiary-gallery { grid-template-columns: repeat(4, 1fr); }
+    .subsidiary-gallery {
+        gap: 5px;
+        padding: 8px;
+    }
 }
 
 .subsidiary-item {
@@ -419,7 +380,7 @@ h1 {
 
 .subsidiary-item img {
     width: 100%;
-    height: 120px;
+    height: auto; /* 自动保持宽高比 */
     object-fit: cover;
     display: block;
 }
@@ -432,7 +393,8 @@ h1 {
     color: white;
     font-size: 12px;
     font-weight: bold;
-    height: 120px;
+    min-height: 120px; /* 最小高度，防止过矮 */
+    aspect-ratio: 4/3; /* 默认宽高比 */
 }
 
 .subsidiary-label {
@@ -485,41 +447,20 @@ h1 {
     min-width: 0; /* 允许收缩 */
 }
 
-/* Image group width control */
-.image-group.wide {
-    grid-column: span 2;
-}
+/* 图片组宽度完全由主图width控制，不需要预定义类 */
 
-.image-group.extra-wide {
-    grid-column: span 3;
-}
-
-.image-group.full-width {
-    grid-column: 1 / -1;
-}
-
-/* 主画廊使用自适应网格系统（图片组和独立图片混合布局） */
+/* 主画廊使用Flexbox布局，完全依赖手动width/height控制 */
 #gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(250px, 20vw), 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 20px;
     margin-top: 30px;
+    align-items: flex-start; /* 顶部对齐 */
 }
 
-/* 独立图片12栏网格容器 */
-.standalone-grid-container {
-    grid-column: 1 / -1; /* 占满整个主画廊宽度 */
-    margin-bottom: 20px;
-}
-
-/* 超宽屏优化 */
+/* 主画廊响应式：超宽屏优化间距 */
 @media (min-width: 1440px) {
     #gallery {
-        gap: 25px;
-        grid-template-columns: repeat(auto-fit, minmax(min(220px, 18vw), 1fr));
-    }
-    
-    .standalone-grid-container {
         gap: 25px;
     }
 }
@@ -527,55 +468,29 @@ h1 {
 @media (min-width: 1920px) {
     #gallery {
         gap: 30px;
-        grid-template-columns: repeat(auto-fit, minmax(min(200px, 15vw), 1fr));
-    }
-    
-    .standalone-grid-container {
-        gap: 30px;
     }
 }
 
 @media (min-width: 2560px) {
     #gallery {
         gap: 35px;
-        grid-template-columns: repeat(auto-fit, minmax(min(180px, 12vw), 1fr));
-    }
-    
-    .standalone-grid-container {
-        gap: 35px;
     }
 }
 
 /* 小屏设备适配 */
 @media (max-width: 768px) {
-    .standalone-grid-container {
+    #gallery {
         gap: 15px;
-    }
-    
-    .standalone-grid-container {
-        grid-template-columns: repeat(6, 1fr) !important; /* 小屏6栏 */
     }
 }
 
 @media (max-width: 480px) {
-    .gallery {
-        grid-template-columns: 1fr;
-    }
-    
-    .standalone-grid-container {
+    #gallery {
         gap: 10px;
-        grid-template-columns: repeat(4, 1fr) !important; /* 超小屏4栏 */
     }
     
-    .subsidiary-gallery {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 8px;
-        padding: 10px;
-    }
-    
-    .subsidiary-item img,
     .subsidiary-item .placeholder {
-        height: 100px;
+        min-height: 100px; /* 小屏最小高度 */
     }
 }
 
@@ -583,17 +498,6 @@ h1 {
 @media (min-width: 1440px) {
     .container {
         padding: 40px;
-    }
-    
-    #gallery {
-        gap: 25px;
-        /* 在超宽屏上允许更小的最小列宽，实现更多列 */
-        grid-template-columns: repeat(auto-fit, minmax(min(220px, 18vw), 1fr));
-    }
-    
-    .subsidiary-gallery {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 15px;
     }
 }
 
@@ -603,14 +507,7 @@ h1 {
         padding: 50px;
     }
     
-    #gallery {
-        gap: 30px;
-        /* 在极宽屏上进一步优化列宽 */
-        grid-template-columns: repeat(auto-fit, minmax(min(200px, 15vw), 1fr));
-    }
-    
     .subsidiary-gallery {
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
         gap: 20px;
         padding: 20px;
     }
@@ -632,14 +529,7 @@ h1 {
         max-width: min(90vw, 2400px);
     }
     
-    #gallery {
-        gap: 35px;
-        /* 在超极宽屏上实现最大列数 */
-        grid-template-columns: repeat(auto-fit, minmax(min(180px, 12vw), 1fr));
-    }
-    
     .subsidiary-gallery {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
         gap: 25px;
         padding: 25px;
     }

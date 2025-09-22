@@ -643,39 +643,23 @@ function renderGallery() {
                 if (!group.rendered) {
                     const groupElement = createImageGroup(group.major, group.subsidiaries);
                     
-                    // 图片组宽度控制：优先考虑主图的固定宽度需求
+                    // 图片组使用主图的宽度，简单直接
                     const majorImg = group.major;
                     if (majorImg.width && majorImg.width !== '100%' && majorImg.width !== 'auto') {
-                        // 主图有固定宽度时，组容器适应主图宽度
+                        // 组容器适应主图宽度
                         groupElement.style.width = 'fit-content';
-                        groupElement.style.minWidth = '250px'; // 保证最小宽度
-                        groupElement.style.maxWidth = '100%'; // 不超过父容器
-                        groupElement.style.gridColumn = 'auto';
-                        groupElement.style.justifySelf = 'start'; // 左对齐，不拉伸
-                    } else if (majorImg.gridSpan) {
-                        // 没有固定宽度时，使用gridSpan控制组宽度
-                        if (majorImg.gridSpan === 2) groupElement.classList.add('wide');
-                        else if (majorImg.gridSpan === 3) groupElement.classList.add('extra-wide');
-                        else if (majorImg.gridSpan >= 4) groupElement.classList.add('full-width');
+                        groupElement.style.minWidth = '250px';
+                        groupElement.style.maxWidth = '100%';
                     }
+                    // 不再使用gridSpan，完全依赖width控制
                     
                     gallery.appendChild(groupElement);
                     group.rendered = true;
                 }
             } else {
-                // This is a standalone major image - 创建12栏网格容器
-                const gridContainer = document.createElement('div');
-                gridContainer.className = 'standalone-grid-container';
-                gridContainer.style.cssText = `
-                    display: grid;
-                    grid-template-columns: repeat(12, 1fr);
-                    gap: 20px;
-                    grid-column: 1 / -1;
-                `;
-                
+                // 独立图片 - 直接使用width/height控制
                 const item = createStandaloneImage(img);
-                gridContainer.appendChild(item);
-                gallery.appendChild(gridContainer);
+                gallery.appendChild(item);
             }
         }
     });
@@ -735,26 +719,28 @@ function createMajorImage(img) {
     const item = document.createElement('div');
     item.className = classes;
     
-    // 主图宽度控制：固定宽度优先
-    if (img.width && img.width !== '100%' && img.width !== 'auto') {
-        // 使用固定宽度 - 设置在容器上确保不被组容器限制
+    // 简化的尺寸控制：直接使用width/height
+    if (img.width) {
         container.style.width = img.width;
-        container.style.maxWidth = 'none'; // 移除最大宽度限制
-        item.style.width = '100%'; // 主图填满容器
-    } else {
-        // 没有固定宽度时，填满组容器
-        container.style.width = '100%';
-        item.style.width = '100%';
+    }
+    if (img.height) {
+        container.style.height = img.height;
+    }
+    // 图片填满容器宽度，高度自适应
+    item.style.width = '100%';
+    // 只有明确设置了height时才强制高度，否则让内容自然撑开
+    if (img.height) {
+        item.style.height = '100%';
     }
     
     const mediaHtml = img.src ? 
         (isVideoFile(img.src) ? 
-            `<video controls onclick="openFullscreen('${img.src}', '${img.title}', 'video')" style="width: 100%; height: ${img.height || 'auto'}; object-fit: cover;" preload="metadata">
+            `<video controls onclick="openFullscreen('${img.src}', '${img.title}', 'video')" style="width: 100%; height: auto; object-fit: cover;" preload="metadata">
                 <source src="${img.src}" type="video/${img.src.substring(img.src.lastIndexOf('.') + 1)}">
                 Your browser does not support the video tag.
             </video>` :
-            `<img src="${img.src}" alt="${img.title}" onclick="openFullscreen('${img.src}', '${img.title}', 'image')" loading="lazy" style="width: 100%; height: ${img.height || 'auto'}; object-fit: cover;">`) : 
-        `<div class="placeholder" onclick="openFullscreen(null, '${img.title}', 'placeholder')" style="height: ${img.height || '200px'};">${img.title}</div>`;
+            `<img src="${img.src}" alt="${img.title}" onclick="openFullscreen('${img.src}', '${img.title}', 'image')" loading="lazy" style="width: 100%; height: auto; object-fit: cover;">`) : 
+        `<div class="placeholder" onclick="openFullscreen(null, '${img.title}', 'placeholder')" style="height: auto; min-height: 200px;">${img.title}</div>`;
     
     item.innerHTML = `
         ${mediaHtml}
@@ -781,33 +767,24 @@ function createSubsidiaryImage(img, majorImage) {
     const item = document.createElement('div');
     item.className = 'subsidiary-item';
 
-    // 优先使用 width，如果没有则使用 gridSpan
-    if (img.width && img.width !== '100%' && img.width !== 'auto') {
-        // 使用固定宽度
+    // 简化的尺寸控制：直接使用width/height
+    if (img.width) {
         item.style.width = img.width;
-        item.style.gridColumn = 'auto'; // 不按栅格布局
-    } else if (img.gridSpan) {
-        // 使用栅格布局（副图是12栏系统）
-        const span = Math.max(1, Math.min(12, img.gridSpan));
-        item.style.gridColumn = `span ${span}`;
     }
-    // 保留原有的 CSS 类作为回退
-    if (img.gridSpan) {
-        if (img.gridSpan === 2) item.classList.add('wide');
-        else if (img.gridSpan === 3) item.classList.add('extra-wide');
-        else if (img.gridSpan >= 4) item.classList.add('full-width');
+    if (img.height) {
+        item.style.height = img.height;
     }
 
     const displayTitle = img.title || majorImage.title;
     
     const mediaHtml = img.src ? 
         (isVideoFile(img.src) ? 
-            `<video controls onclick="openFullscreen('${img.src}', '${displayTitle}', 'video')" style="width: 100%; height: ${img.height || '120px'}; object-fit: cover;" preload="metadata">
+            `<video controls onclick="openFullscreen('${img.src}', '${displayTitle}', 'video')" style="width: 100%; height: auto; object-fit: cover;" preload="metadata">
                 <source src="${img.src}" type="video/${img.src.substring(img.src.lastIndexOf('.') + 1)}">
                 Your browser does not support the video tag.
             </video>` :
-            `<img src="${img.src}" alt="${displayTitle}" onclick="openFullscreen('${img.src}', '${displayTitle}', 'image')" loading="lazy" style="width: 100%; height: ${img.height || '120px'}; object-fit: cover;">`) : 
-        `<div class="placeholder" onclick="openFullscreen(null, '${displayTitle}', 'placeholder')" style="height: ${img.height || '120px'};">${displayTitle}</div>`;
+            `<img src="${img.src}" alt="${displayTitle}" onclick="openFullscreen('${img.src}', '${displayTitle}', 'image')" loading="lazy" style="width: 100%; height: auto; object-fit: cover;">`) : 
+        `<div class="placeholder" onclick="openFullscreen(null, '${displayTitle}', 'placeholder')" style="height: auto;">${displayTitle}</div>`;
 
     item.innerHTML = `
         ${mediaHtml}
@@ -824,25 +801,22 @@ function createStandaloneImage(img) {
     const item = document.createElement('div');
     item.className = classes;
     
-    // 优先使用 width，如果没有则使用 gridSpan
-    if (img.width && img.width !== '100%' && img.width !== 'auto') {
-        // 使用固定宽度
+    // 简化的尺寸控制：直接使用width/height
+    if (img.width) {
         item.style.width = img.width;
-        item.style.gridColumn = 'auto'; // 不按栅格布局
-    } else {
-        // 使用栅格布局
-        const span = img.gridSpan || 4; // 默认4栏
-        item.style.gridColumn = `span ${Math.max(1, Math.min(12, span))}`;
+    }
+    if (img.height) {
+        item.style.height = img.height;
     }
     
     const mediaHtml = img.src ? 
         (isVideoFile(img.src) ? 
-            `<video controls onclick="openFullscreen('${img.src}', '${img.title}', 'video')" style="width: 100%; height: ${img.height || 'auto'}; object-fit: cover;" preload="metadata">
+            `<video controls onclick="openFullscreen('${img.src}', '${img.title}', 'video')" style="width: 100%; height: auto; object-fit: cover;" preload="metadata">
                 <source src="${img.src}" type="video/${img.src.substring(img.src.lastIndexOf('.') + 1)}">
                 Your browser does not support the video tag.
             </video>` :
-            `<img src="${img.src}" alt="${img.title}" onclick="openFullscreen('${img.src}', '${img.title}', 'image')" loading="lazy" style="width: 100%; height: ${img.height || 'auto'}; object-fit: cover;">`) : 
-        `<div class="placeholder" onclick="openFullscreen(null, '${img.title}', 'placeholder')" style="height: ${img.height || '200px'};">${img.title}</div>`;
+            `<img src="${img.src}" alt="${img.title}" onclick="openFullscreen('${img.src}', '${img.title}', 'image')" loading="lazy" style="width: 100%; height: auto; object-fit: cover;">`) : 
+        `<div class="placeholder" onclick="openFullscreen(null, '${img.title}', 'placeholder')" style="height: auto; min-height: 200px;">${img.title}</div>`;
     
     item.innerHTML = `
         ${mediaHtml}
