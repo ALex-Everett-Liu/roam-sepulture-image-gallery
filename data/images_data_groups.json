@@ -7,9 +7,9 @@
       "src": "https://picsum.photos/600/400",
       "ranking": 9.2,
       "tags": ["sunset", "beach", "ocean", "golden-hour"],
-      "width": "600px",
+      "width": "100%",
       "height": "400px",
-      "gridSpan": 2,
+      "gridSpan": 3,
       "isMajor": true,
       "groupId": "group-1"
     },
@@ -136,7 +136,7 @@
       "src": "https://picsum.photos/400/300",
       "ranking": 7.8,
       "tags": ["ocean", "wave", "water", "power"],
-      "width": "400px",
+      "width": "100%",
       "height": "300px",
       "gridSpan": 1,
       "isMajor": true

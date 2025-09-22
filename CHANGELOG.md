@@ -5,6 +5,66 @@ All notable changes to the Roam Sepulture Image Gallery project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2025-09-22
+
+### Added
+- **Ultra-wide screen optimization**
+  - Removed 1200px container width limitation, now supports up to 2400px or 95% viewport width
+  - Dynamic grid system that adapts to screen width with intelligent column sizing
+  - Progressive responsive design with optimized breakpoints for 1440px+, 1920px+, and 2560px+
+  - Enhanced grid utilization allowing more columns on wider displays
+- **Improved full-width image support**
+  - Unified full-width implementation using `grid-column: 1 / -1` for true edge-to-edge display
+  - Enhanced `gridSpan: 4` behavior to properly utilize entire available width
+  - Better coordination between `gridSpan` and `width` properties in JSON configuration
+- **Enhanced user interface for wide screens**
+  - Centered pagination controls with maximum width constraints to prevent over-stretching
+  - Optimized control panels and tag clouds for better wide-screen layout
+  - Management section with intelligent column layout for documentation
+  - Proportionally scaled typography for larger displays (up to 3rem headers on 1920px+ screens)
+
+### Technical Implementation
+- **Responsive grid system enhancements**
+  - Base grid: `minmax(min(250px, 20vw), 1fr)` for dynamic column sizing
+  - 1440px+: `minmax(min(220px, 18vw), 1fr)` allowing 6-8 columns
+  - 1920px+: `minmax(min(200px, 15vw), 1fr)` supporting 7-9 columns  
+  - 2560px+: `minmax(min(180px, 12vw), 1fr)` enabling 10-13 columns
+- **Container system overhaul**
+  - Dynamic width calculation using `min(95vw, 2400px)` for optimal space utilization
+  - Progressive padding adjustments (30px → 40px → 50px → 60px) across breakpoints
+  - Intelligent maximum width constraints for different UI components
+- **Grid span optimization**
+  - Consistent `gridSpan` to CSS class mapping across all image types
+  - Enhanced subsidiary gallery grid systems for ultra-wide displays
+  - Improved gap spacing that scales with screen size (20px → 35px)
+
+### User Experience Improvements
+- **Better content organization**
+  - Wide-screen layouts prevent UI elements from becoming too dispersed
+  - Centered layouts for controls and pagination maintain comfortable viewing angles
+  - Multi-column documentation display for enhanced readability on large screens
+- **Improved visual balance**
+  - Typography scaling ensures comfortable reading at all screen sizes
+  - Progressive spacing adjustments maintain proper content density
+  - Enhanced visual hierarchy through responsive design patterns
+
+### Configuration Guidance
+- **JSON optimization recommendations**
+  - `gridSpan: 1-2` for standard images (adapts well to column increases)
+  - `gridSpan: 3` recommended for important images on ultra-wide screens  
+  - `gridSpan: 4` for true full-width banners and panoramic content
+  - `width: "100%"` recommended over fixed pixel values for optimal adaptation
+
+### Backward Compatibility
+- **Seamless migration**
+  - All existing JSON configurations continue to work without modification
+  - Enhanced behavior maintains visual consistency while improving wide-screen utilization
+  - No breaking changes to existing features or data formats
+- **Progressive enhancement**
+  - Standard screens (< 1440px) maintain existing appearance and behavior
+  - Wide-screen benefits only activate on appropriate displays
+  - Graceful fallbacks ensure compatibility across all device types
+
 ## [0.1.3] - 2025-09-22
 
 ### Added
