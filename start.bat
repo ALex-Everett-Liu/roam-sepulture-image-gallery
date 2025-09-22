@@ -28,3 +28,4 @@ echo Launching Image Gallery...
 npm start
 
 pause
+

@@ -5,6 +5,66 @@ All notable changes to the Roam Sepulture Image Gallery project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2025-09-22
+
+### Added
+- **Complete pagination system**
+  - Configurable items per page (6, 12, 18, 24, 36, 48, 60 items)
+  - Full pagination navigation with first/last/previous/next buttons
+  - Smart page number display with ellipsis for large page counts
+  - Direct page jump functionality with input validation
+  - Responsive pagination controls for mobile devices
+- **Enhanced user experience**
+  - Automatic page reset when filters or sorting changes
+  - Smooth scrolling to gallery top when changing pages
+  - Real-time pagination info display (e.g., "Showing 1-12 of 24 images")
+  - Visual feedback for active page and disabled navigation buttons
+- **Settings persistence**
+  - Pagination preferences saved to localStorage
+  - Current page and items-per-page settings restored on app restart
+  - Integrated with existing settings management system
+- **Performance optimization**
+  - Only renders images for current page, improving performance with large datasets
+  - Reduced DOM overhead by limiting rendered elements
+  - Efficient pagination calculations with boundary handling
+
+### Technical Implementation
+- **State management enhancements**
+  - Added pagination-specific global variables (`currentPage`, `itemsPerPage`, `totalPages`, `paginatedImages`)
+  - Extended user settings persistence to include pagination state
+  - Smart pagination calculation with automatic boundary correction
+- **UI component additions**
+  - New pagination container with info display, navigation controls, and page jump
+  - Dynamic page number generation with smart ellipsis handling
+  - Responsive CSS styling matching application theme
+  - Integration with existing gallery layout and controls
+- **Function enhancements**
+  - Modified `renderGallery()` to work with paginated data subset
+  - Enhanced `filterAndSortImages()` to apply pagination after processing
+  - Added comprehensive pagination navigation functions
+  - Updated settings management to handle pagination preferences
+
+### User Interface Updates
+- **Settings panel additions**
+  - Items per page selector with preset options
+  - Pagination reset button for quick defaults
+  - Visual integration with existing settings layout
+- **Gallery enhancements**
+  - Pagination controls positioned below gallery grid
+  - Clean, professional styling with hover effects and transitions
+  - Mobile-responsive design with flexible layout
+  - Clear visual separation between gallery content and pagination
+
+### Compatibility
+- **Backward compatibility maintained**
+  - All existing gallery features work seamlessly with pagination
+  - Grouping, filtering, sorting, and fullscreen viewing fully compatible
+  - No breaking changes to JSON data format or existing functionality
+- **Performance benefits**
+  - Large image collections now load and display faster
+  - Reduced memory usage by limiting rendered DOM elements
+  - Smoother user experience with paginated content loading
+
 ## [0.1.2] - 2025-01-26
 
 ### Added

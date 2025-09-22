@@ -38,3 +38,4 @@ Currently, the application references placeholder icon files:
 - `assets/icon.icns` (macOS)
 
 Add your actual icon files to this directory to replace the placeholders.
+

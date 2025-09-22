@@ -40,6 +40,34 @@
             <!-- Images will be populated by JavaScript -->
         </div>
         
+        <div class="pagination-container" id="pagination-container" style="display: none;">
+            <div class="pagination-info">
+                <span id="pagination-info-text">Showing 1-12 of 24 images</span>
+            </div>
+            <div class="pagination-controls">
+                <button class="pagination-btn" id="first-page-btn" onclick="goToFirstPage()" title="First Page">
+                    <i class="fas fa-angle-double-left"></i>
+                </button>
+                <button class="pagination-btn" id="prev-page-btn" onclick="goToPreviousPage()" title="Previous Page">
+                    <i class="fas fa-angle-left"></i>
+                </button>
+                <div class="page-numbers" id="page-numbers">
+                    <!-- Page numbers will be populated by JavaScript -->
+                </div>
+                <button class="pagination-btn" id="next-page-btn" onclick="goToNextPage()" title="Next Page">
+                    <i class="fas fa-angle-right"></i>
+                </button>
+                <button class="pagination-btn" id="last-page-btn" onclick="goToLastPage()" title="Last Page">
+                    <i class="fas fa-angle-double-right"></i>
+                </button>
+            </div>
+            <div class="page-jump">
+                <label for="page-jump-input">Go to page:</label>
+                <input type="number" id="page-jump-input" min="1" placeholder="1" style="width: 60px;">
+                <button class="pagination-btn" onclick="jumpToPage()">Go</button>
+            </div>
+        </div>
+        
         <div class="settings-panel" id="settings-panel" style="display: none;">
             <div class="settings-header">
                 <h3><i class="fas fa-cogs"></i> Gallery Settings</h3>
@@ -68,6 +96,22 @@
                 </button>
                 <button class="settings-button secondary" onclick="resetToFallback()">
                     <i class="fas fa-undo"></i> Use Sample Data
+                </button>
+            </div>
+            
+            <div class="settings-row">
+                <label>Items per Page:</label>
+                <select id="items-per-page-selector" class="settings-input" onchange="updateItemsPerPage()">
+                    <option value="6">6 items</option>
+                    <option value="12" selected>12 items</option>
+                    <option value="18">18 items</option>
+                    <option value="24">24 items</option>
+                    <option value="36">36 items</option>
+                    <option value="48">48 items</option>
+                    <option value="60">60 items</option>
+                </select>
+                <button class="settings-button" onclick="resetPagination()">
+                    <i class="fas fa-refresh"></i> Reset
                 </button>
             </div>
             

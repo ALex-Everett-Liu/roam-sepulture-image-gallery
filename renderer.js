@@ -39,6 +39,12 @@ let isLoading = false;
 let currentJsonFile = 'images_data_groups.json';
 let availableFiles = [];
 
+// Pagination variables
+let currentPage = 1;
+let itemsPerPage = 12;
+let totalPages = 1;
+let paginatedImages = [];
+
 // Video support utility functions
 function isVideoFile(src) {
     if (!src) return false;
@@ -105,6 +111,12 @@ function loadUserSettings() {
                 currentSort = settings.currentSort;
                 document.getElementById('sort-select').value = currentSort;
             }
+            if (settings.itemsPerPage) {
+                itemsPerPage = settings.itemsPerPage;
+            }
+            if (settings.currentPage) {
+                currentPage = settings.currentPage;
+            }
         } catch (error) {
             console.warn('Failed to load user settings:', error);
         }
@@ -116,6 +128,8 @@ function saveUserSettings() {
     const settings = {
         currentJsonFile: currentJsonFile,
         currentSort: currentSort,
+        itemsPerPage: itemsPerPage,
+        currentPage: currentPage,
         lastUpdated: new Date().toISOString()
     };
     localStorage.setItem('gallerySettings', JSON.stringify(settings));
@@ -126,6 +140,13 @@ function saveUserSettings() {
 function updateSettingsDisplay() {
     document.getElementById('current-json-file').textContent = currentJsonFile;
     document.getElementById('custom-json-file').value = currentJsonFile;
+    
+    // Update pagination settings display
+    const itemsPerPageSelector = document.getElementById('items-per-page-selector');
+    if (itemsPerPageSelector) {
+        itemsPerPageSelector.value = itemsPerPage;
+    }
+    
     populateJsonSelector();
 }
 
@@ -283,12 +304,16 @@ function toggleTag(tag, element) {
         selectedTags.push(tag);
         element.classList.add('active');
     }
+    
+    currentPage = 1; // Reset to first page when filtering changes
+    saveUserSettings();
     filterAndRender();
 }
 
 // Handle sort change
 function handleSort(event) {
     currentSort = event.target.value;
+    currentPage = 1; // Reset to first page when sorting changes
     saveUserSettings();
     filterAndRender();
 }
@@ -307,11 +332,145 @@ function handleTagSearch(event) {
     });
 }
 
+// Calculate pagination data
+function calculatePagination() {
+    const totalItems = filteredImages.length;
+    totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+    
+    // Ensure current page is within valid range
+    if (currentPage > totalPages) {
+        currentPage = totalPages;
+    }
+    if (currentPage < 1) {
+        currentPage = 1;
+    }
+}
+
+// Apply pagination to filtered images
+function applyPagination() {
+    calculatePagination();
+    
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    
+    paginatedImages = filteredImages.slice(startIndex, endIndex);
+    
+    updatePaginationDisplay();
+}
+
+// Update pagination display elements
+function updatePaginationDisplay() {
+    const paginationContainer = document.getElementById('pagination-container');
+    const paginationInfo = document.getElementById('pagination-info-text');
+    const pageNumbers = document.getElementById('page-numbers');
+    const pageJumpInput = document.getElementById('page-jump-input');
+    
+    // Show/hide pagination container
+    if (totalPages > 1) {
+        paginationContainer.style.display = 'block';
+    } else {
+        paginationContainer.style.display = 'none';
+        return;
+    }
+    
+    // Update pagination info
+    const startItem = (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, filteredImages.length);
+    paginationInfo.textContent = `Showing ${startItem}-${endItem} of ${filteredImages.length} images`;
+    
+    // Update page jump input
+    pageJumpInput.max = totalPages;
+    pageJumpInput.placeholder = currentPage;
+    
+    // Update page numbers
+    generatePageNumbers();
+    
+    // Update navigation buttons
+    updateNavigationButtons();
+}
+
+// Generate page number buttons
+function generatePageNumbers() {
+    const pageNumbers = document.getElementById('page-numbers');
+    pageNumbers.innerHTML = '';
+    
+    const maxVisiblePages = 7;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    // Adjust start page if we're near the end
+    if (endPage - startPage < maxVisiblePages - 1) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    // Show first page and ellipsis if needed
+    if (startPage > 1) {
+        const firstBtn = createPageButton(1);
+        pageNumbers.appendChild(firstBtn);
+        
+        if (startPage > 2) {
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'page-ellipsis';
+            ellipsis.textContent = '...';
+            pageNumbers.appendChild(ellipsis);
+        }
+    }
+    
+    // Show page numbers
+    for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = createPageButton(i);
+        pageNumbers.appendChild(pageBtn);
+    }
+    
+    // Show last page and ellipsis if needed
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'page-ellipsis';
+            ellipsis.textContent = '...';
+            pageNumbers.appendChild(ellipsis);
+        }
+        
+        const lastBtn = createPageButton(totalPages);
+        pageNumbers.appendChild(lastBtn);
+    }
+}
+
+// Create a page number button
+function createPageButton(pageNum) {
+    const button = document.createElement('button');
+    button.className = 'page-number-btn';
+    button.textContent = pageNum;
+    button.onclick = () => goToPage(pageNum);
+    
+    if (pageNum === currentPage) {
+        button.classList.add('active');
+    }
+    
+    return button;
+}
+
+// Update navigation button states
+function updateNavigationButtons() {
+    const firstBtn = document.getElementById('first-page-btn');
+    const prevBtn = document.getElementById('prev-page-btn');
+    const nextBtn = document.getElementById('next-page-btn');
+    const lastBtn = document.getElementById('last-page-btn');
+    
+    // Disable/enable buttons based on current page
+    firstBtn.disabled = currentPage === 1;
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = currentPage === totalPages;
+    lastBtn.disabled = currentPage === totalPages;
+}
+
 // Filter and sort images
 function filterAndSortImages() {
     console.log('Starting filterAndSortImages with images:', images ? images.length : 0);
     if (!images || images.length === 0) {
         filteredImages = [];
+        paginatedImages = [];
+        updatePaginationDisplay();
         return;
     }
     
@@ -391,6 +550,9 @@ function filterAndSortImages() {
     
     filteredImages = workingImages;
     console.log('Final filteredImages count:', filteredImages.length);
+    
+    // Apply pagination after filtering and sorting
+    applyPagination();
 }
 
 // Helper function to get ranking for sorting
@@ -422,13 +584,22 @@ function renderGallery() {
     const gallery = document.getElementById('gallery');
     gallery.innerHTML = '';
 
-    if (filteredImages.length === 0) {
-        gallery.innerHTML = `
-            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--secondary-color);">
-                <h3>No images found</h3>
-                <p>Try adjusting your filters or search criteria.</p>
-            </div>
-        `;
+    if (paginatedImages.length === 0) {
+        if (filteredImages.length === 0) {
+            gallery.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--secondary-color);">
+                    <h3>No images found</h3>
+                    <p>Try adjusting your filters or search criteria.</p>
+                </div>
+            `;
+        } else {
+            gallery.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--secondary-color);">
+                    <h3>No images on this page</h3>
+                    <p>Go to a different page or adjust pagination settings.</p>
+                </div>
+            `;
+        }
         return;
     }
 
@@ -436,8 +607,8 @@ function renderGallery() {
     const groupMap = {};
     const subsidiaryMap = {};
     
-    // First pass: collect all major images and their subsidiaries
-    filteredImages.forEach(img => {
+    // First pass: collect all major images and their subsidiaries from paginated images
+    paginatedImages.forEach(img => {
         if (img.isMajor !== false) {
             if (img.groupId) {
                 if (!groupMap[img.groupId]) {
@@ -464,7 +635,7 @@ function renderGallery() {
     });
 
     // Render all images in the correct sorted order
-    filteredImages.forEach((img, index) => {
+    paginatedImages.forEach((img, index) => {
         if (img.isMajor !== false) {
             if (img.groupId && groupMap[img.groupId]) {
                 // This is a major image with a group
@@ -871,6 +1042,8 @@ async function listAvailableFiles() {
 function clearAllFilters() {
     selectedTags = [];
     tagSearchQuery = '';
+    currentPage = 1; // Reset to first page when clearing filters
+    
     document.getElementById('tag-search').value = '';
     document.getElementById('sort-select').value = 'ranking-desc';
     currentSort = 'ranking-desc';
@@ -882,6 +1055,76 @@ function clearAllFilters() {
     
     saveUserSettings();
     filterAndRender();
+}
+
+// Pagination navigation functions
+function goToPage(pageNum) {
+    if (pageNum >= 1 && pageNum <= totalPages && pageNum !== currentPage) {
+        currentPage = pageNum;
+        applyPagination();
+        renderGallery();
+        saveUserSettings();
+        
+        // Scroll to top of gallery
+        document.getElementById('gallery').scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function goToFirstPage() {
+    goToPage(1);
+}
+
+function goToPreviousPage() {
+    goToPage(currentPage - 1);
+}
+
+function goToNextPage() {
+    goToPage(currentPage + 1);
+}
+
+function goToLastPage() {
+    goToPage(totalPages);
+}
+
+function jumpToPage() {
+    const input = document.getElementById('page-jump-input');
+    const pageNum = parseInt(input.value);
+    
+    if (!isNaN(pageNum)) {
+        goToPage(pageNum);
+        input.value = '';
+    }
+}
+
+// Settings functions for pagination
+function updateItemsPerPage() {
+    const selector = document.getElementById('items-per-page-selector');
+    const newItemsPerPage = parseInt(selector.value);
+    
+    if (newItemsPerPage !== itemsPerPage) {
+        itemsPerPage = newItemsPerPage;
+        currentPage = 1; // Reset to first page when changing items per page
+        
+        filterAndSortImages(); // This will apply pagination
+        renderGallery();
+        saveUserSettings();
+        
+        showToast(`Updated to ${itemsPerPage} items per page`, 'success');
+    }
+}
+
+function resetPagination() {
+    currentPage = 1;
+    itemsPerPage = 12;
+    
+    // Update UI
+    document.getElementById('items-per-page-selector').value = itemsPerPage;
+    
+    filterAndSortImages();
+    renderGallery();
+    saveUserSettings();
+    
+    showToast('Pagination settings reset', 'info');
 }
 
 // Filter and render
