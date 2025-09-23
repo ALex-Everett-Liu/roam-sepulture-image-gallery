@@ -719,20 +719,33 @@ function createMajorImage(img) {
     const item = document.createElement('div');
     item.className = classes;
     
-    // 简化的尺寸控制：直接使用width/height
+    // 智能尺寸控制：支持宽高比的双向自适应
     if (img.width) {
         container.style.width = img.width;
     }
     if (img.height) {
         container.style.height = img.height;
     }
-    // 图片填满容器宽度，高度自适应
-    item.style.width = '100%';
-    // 只有明确设置了height时才强制高度，否则让内容自然撑开
-    if (img.height) {
+
+    // 根据设置的维度决定图片的填充方式
+    if (img.width && img.height) {
+        // 两者都设置：强制尺寸
+        item.style.width = '100%';
         item.style.height = '100%';
+    } else if (img.width && !img.height) {
+        // 只设置宽度：高度自适应保持宽高比
+        item.style.width = '100%';
+        item.style.height = 'auto';
+    } else if (!img.width && img.height) {
+        // 只设置高度：宽度自适应保持宽高比
+        item.style.width = 'auto';
+        item.style.height = '100%';
+    } else {
+        // 都不设置：使用默认尺寸
+        item.style.width = 'auto';
+        item.style.height = 'auto';
     }
-    
+        
     const mediaHtml = img.src ? 
         (isVideoFile(img.src) ? 
             `<video controls onclick="openFullscreen('${img.src}', '${img.title}', 'video')" style="width: 100%; height: auto; object-fit: cover;" preload="metadata">
@@ -767,12 +780,26 @@ function createSubsidiaryImage(img, majorImage) {
     const item = document.createElement('div');
     item.className = 'subsidiary-item';
 
-    // 简化的尺寸控制：直接使用width/height
+    // 智能尺寸控制：支持宽高比的双向自适应
     if (img.width) {
         item.style.width = img.width;
     }
     if (img.height) {
         item.style.height = img.height;
+    }
+
+    // 为内部媒体元素设置合适的布局模式
+    const hasWidth = img.width && img.width !== '100%' && img.width !== 'auto';
+    const hasHeight = img.height && img.height !== '100%' && img.height !== 'auto';
+
+    if (hasWidth && hasHeight) {
+        item.setAttribute('data-sizing', 'both');       // 强制尺寸
+    } else if (hasWidth && !hasHeight) {
+        item.setAttribute('data-sizing', 'width-only'); // 宽度固定，高度自适应
+    } else if (!hasWidth && hasHeight) {
+        item.setAttribute('data-sizing', 'height-only'); // 高度固定，宽度自适应
+    } else {
+        item.setAttribute('data-sizing', 'auto');       // 自然尺寸
     }
 
     const displayTitle = img.title || majorImage.title;
@@ -801,14 +828,28 @@ function createStandaloneImage(img) {
     const item = document.createElement('div');
     item.className = classes;
     
-    // 简化的尺寸控制：直接使用width/height
+    // 智能尺寸控制：支持宽高比的双向自适应
     if (img.width) {
         item.style.width = img.width;
     }
     if (img.height) {
         item.style.height = img.height;
     }
-    
+
+    // 为内部媒体元素设置合适的布局模式
+    const hasWidth = img.width && img.width !== '100%' && img.width !== 'auto';
+    const hasHeight = img.height && img.height !== '100%' && img.height !== 'auto';
+
+    if (hasWidth && hasHeight) {
+        item.setAttribute('data-sizing', 'both');       // 强制尺寸
+    } else if (hasWidth && !hasHeight) {
+        item.setAttribute('data-sizing', 'width-only'); // 宽度固定，高度自适应
+    } else if (!hasWidth && hasHeight) {
+        item.setAttribute('data-sizing', 'height-only'); // 高度固定，宽度自适应
+    } else {
+        item.setAttribute('data-sizing', 'auto');       // 自然尺寸
+    }
+        
     const mediaHtml = img.src ? 
         (isVideoFile(img.src) ? 
             `<video controls onclick="openFullscreen('${img.src}', '${img.title}', 'video')" style="width: 100%; height: auto; object-fit: cover;" preload="metadata">

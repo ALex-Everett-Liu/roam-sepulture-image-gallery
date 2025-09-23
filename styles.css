@@ -956,3 +956,38 @@ h1 {
         justify-content: center;
     }
 }
+
+/* 智能图片尺寸适应 */
+[data-sizing="both"] img,
+[data-sizing="both"] video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+[data-sizing="width-only"] img,
+[data-sizing="width-only"] video {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+[data-sizing="height-only"] img,
+[data-sizing="height-only"] video {
+    width: auto;
+    height: 100%;
+    object-fit: cover;
+}
+
+[data-sizing="auto"] img,
+[data-sizing="auto"] video {
+    width: auto;
+    height: auto;
+    object-fit: cover;
+}
+
+/* 确保占位符也遵循相同规则 */
+[data-sizing="height-only"] .placeholder {
+    width: auto;
+    height: 100%;
+}
