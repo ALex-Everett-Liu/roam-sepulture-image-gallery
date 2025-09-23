@@ -745,16 +745,30 @@ function createMajorImage(img) {
         item.style.width = 'auto';
         item.style.height = 'auto';
     }
+
+    // 为主图也设置data-sizing属性
+    const hasWidth = img.width && img.width !== '100%' && img.width !== 'auto';
+    const hasHeight = img.height && img.height !== '100%' && img.height !== 'auto';
+
+    if (hasWidth && hasHeight) {
+        item.setAttribute('data-sizing', 'both');
+    } else if (hasWidth && !hasHeight) {
+        item.setAttribute('data-sizing', 'width-only');
+    } else if (!hasWidth && hasHeight) {
+        item.setAttribute('data-sizing', 'height-only');
+    } else {
+        item.setAttribute('data-sizing', 'auto');
+    }
         
     const mediaHtml = img.src ? 
-        (isVideoFile(img.src) ? 
-            `<video controls onclick="openFullscreen('${img.src}', '${img.title}', 'video')" style="width: 100%; height: auto; object-fit: cover;" preload="metadata">
-                <source src="${img.src}" type="video/${img.src.substring(img.src.lastIndexOf('.') + 1)}">
-                Your browser does not support the video tag.
-            </video>` :
-            `<img src="${img.src}" alt="${img.title}" onclick="openFullscreen('${img.src}', '${img.title}', 'image')" loading="lazy" style="width: 100%; height: auto; object-fit: cover;">`) : 
-        `<div class="placeholder" onclick="openFullscreen(null, '${img.title}', 'placeholder')" style="height: auto; min-height: 200px;">${img.title}</div>`;
-    
+    (isVideoFile(img.src) ? 
+        `<video controls onclick="openFullscreen('${img.src}', '${img.title}', 'video')" preload="metadata">
+            <source src="${img.src}" type="video/${img.src.substring(img.src.lastIndexOf('.') + 1)}">
+            Your browser does not support the video tag.
+        </video>` :
+        `<img src="${img.src}" alt="${img.title}" onclick="openFullscreen('${img.src}', '${img.title}', 'image')" loading="lazy">`) : 
+    `<div class="placeholder" onclick="openFullscreen(null, '${img.title}', 'placeholder')">${img.title}</div>`;
+
     item.innerHTML = `
         ${mediaHtml}
         <div class="caption">
@@ -806,12 +820,12 @@ function createSubsidiaryImage(img, majorImage) {
     
     const mediaHtml = img.src ? 
         (isVideoFile(img.src) ? 
-            `<video controls onclick="openFullscreen('${img.src}', '${displayTitle}', 'video')" style="width: 100%; height: auto; object-fit: cover;" preload="metadata">
+            `<video controls onclick="openFullscreen('${img.src}', '${displayTitle}', 'video')" preload="metadata">
                 <source src="${img.src}" type="video/${img.src.substring(img.src.lastIndexOf('.') + 1)}">
                 Your browser does not support the video tag.
             </video>` :
-            `<img src="${img.src}" alt="${displayTitle}" onclick="openFullscreen('${img.src}', '${displayTitle}', 'image')" loading="lazy" style="width: 100%; height: auto; object-fit: cover;">`) : 
-        `<div class="placeholder" onclick="openFullscreen(null, '${displayTitle}', 'placeholder')" style="height: auto;">${displayTitle}</div>`;
+            `<img src="${img.src}" alt="${displayTitle}" onclick="openFullscreen('${img.src}', '${displayTitle}', 'image')" loading="lazy">`) : 
+        `<div class="placeholder" onclick="openFullscreen(null, '${displayTitle}', 'placeholder')">${displayTitle}</div>`;
 
     item.innerHTML = `
         ${mediaHtml}
@@ -852,13 +866,13 @@ function createStandaloneImage(img) {
         
     const mediaHtml = img.src ? 
         (isVideoFile(img.src) ? 
-            `<video controls onclick="openFullscreen('${img.src}', '${img.title}', 'video')" style="width: 100%; height: auto; object-fit: cover;" preload="metadata">
+            `<video controls onclick="openFullscreen('${img.src}', '${img.title}', 'video')" preload="metadata">
                 <source src="${img.src}" type="video/${img.src.substring(img.src.lastIndexOf('.') + 1)}">
                 Your browser does not support the video tag.
             </video>` :
-            `<img src="${img.src}" alt="${img.title}" onclick="openFullscreen('${img.src}', '${img.title}', 'image')" loading="lazy" style="width: 100%; height: auto; object-fit: cover;">`) : 
-        `<div class="placeholder" onclick="openFullscreen(null, '${img.title}', 'placeholder')" style="height: auto; min-height: 200px;">${img.title}</div>`;
-    
+            `<img src="${img.src}" alt="${img.title}" onclick="openFullscreen('${img.src}', '${img.title}', 'image')" loading="lazy">`) : 
+        `<div class="placeholder" onclick="openFullscreen(null, '${img.title}', 'placeholder')">${img.title}</div>`;
+
     item.innerHTML = `
         ${mediaHtml}
         <div class="ranking">⭐ ${img.ranking}</div>

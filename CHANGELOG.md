@@ -5,6 +5,64 @@ All notable changes to the Roam Sepulture Image Gallery project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2025-09-22
+
+### Bug Fixes - Bidirectional Aspect Ratio Support
+- **Fixed dual-direction aspect ratio preservation**
+  - Resolved issue where only width-based aspect ratio was working correctly
+  - Now supports both scenarios: width-only → height auto-adjusts, height-only → width auto-adjusts
+  - Fixed major image containers not properly adapting when only height is specified
+- **Resolved inline style conflicts**
+  - Removed hardcoded `style="width: 100%; height: auto;"` from img and video elements
+  - Fixed conflict between inline styles and CSS `data-sizing` rules
+  - All media elements now properly respect container sizing attributes
+- **Enhanced data-sizing system**
+  - Added `data-sizing` attribute support for major images (.major-image-container)
+  - Unified sizing behavior across major images, subsidiary images, and standalone images
+  - Fixed issue where major images with height-only settings were being cropped instead of scaled
+
+### Technical Improvements
+- **Cleaner HTML generation**
+  - Removed inline CSS styles from dynamically generated img/video elements
+  - Moved all sizing logic to CSS classes using data-sizing attributes
+  - Improved separation of concerns between JavaScript logic and visual styling
+- **Enhanced CSS rule specificity**
+  - Added specific CSS rules for major image containers with data-sizing attributes
+  - Ensures consistent behavior across all image types and containers
+  - Better handling of placeholder elements in different sizing scenarios
+
+### User Experience Enhancements
+- **More intuitive image sizing**
+  - Images with only height specified now properly scale width to maintain aspect ratio
+  - No more unexpected cropping when using height-only configurations
+  - Consistent aspect ratio preservation regardless of which dimension is specified
+- **Improved visual consistency**
+  - Major images, subsidiary images, and standalone images now all follow the same sizing logic
+  - Predictable behavior when switching between width-only, height-only, or both dimensions specified
+
+### Migration Impact
+- **Seamless upgrade**: No changes required to existing JSON configurations
+- **Better handling**: Existing height-only configurations now work as expected
+- **Performance**: Slightly improved rendering due to reduced inline style processing
+
+### Example Usage
+```json
+{
+  "width": null,
+  "height": "900px"
+  // Image will now properly scale width to maintain aspect ratio
+  // instead of being cropped to fit container
+}
+```
+
+```json
+{
+  "width": "400px", 
+  "height": null
+  // Image height auto-adjusts to maintain aspect ratio
+  // (this was already working correctly)
+}
+
 ## [0.2.0] - 2025-09-22
 
 ### Major Changes - Layout System Overhaul
