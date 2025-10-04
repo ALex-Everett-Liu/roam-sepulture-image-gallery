@@ -15,6 +15,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Impact**: Users can now edit all images including subsidiary images within groups
 - **Files Modified**: `styles.css` (line 1329)
 
+### v0.2.3+ Major UX Improvement - Complete Ranking Manual Control
+- **Eliminated ALL automatic 5.0 ranking behavior** (2025-10-05)
+- **Issue**: Ranking field was auto-filled with 5.0 in multiple places, forcing users to delete it
+- **Root Cause**: Hard-coded defaults in JavaScript, HTML, and database operations
+- **Solution**: Complete removal of ALL ranking defaults and auto-fill behavior
+- **Impact**: Users now have 100% manual control over ranking input
+
+### Changes Made:
+- **HTML Form**: Removed `value="5.0"` from ranking input field (`index.html:299`)
+- **Frontend JavaScript**: Eliminated ALL auto-fill behavior from `showAddImageModal()`, `showEditImageModal()`, `updateFormRequirements()`, and `setupFormChangeListeners()`
+- **Database Operations**: Removed ALL `|| 5.0` defaults from `addImage()` and `updateImage()` functions in `database.js`
+- **Form Processing**: Updated `handleRankingValue()` function to return `null` for empty values (no defaults)
+- **Emergency Form Data**: Removed ranking defaults from emergency form data creation logic
+
+### Technical Implementation:
+- **Complete removal of ranking defaults**: No more `image.ranking || 5.0` anywhere in the codebase
+- **Null value handling**: Empty ranking fields now save as `null` in the database
+- **User-controlled input**: 100% manual control over ranking input with no hidden defaults
+- **Consistent behavior**: Same empty field behavior across all image types (major, subsidiary, standalone)
+- **Database compatibility**: SQLite properly handles null ranking values with existing null-check logic
+
+### User Experience Benefits:
+- **No more forced deletions**: Users no longer need to delete auto-filled 5.0 ranking values
+- **Complete control**: Users decide whether to input ranking or leave it empty
+- **Cleaner workflow**: Empty ranking fields stay empty unless manually filled
+- **Reduced friction**: Eliminates the annoyance of unwanted auto-filled values
+- **Intuitive behavior**: Empty fields behave exactly as users expect them to
+
+### Files Modified:
+- `renderer.js` - Multiple functions updated to remove auto-fill logic
+- `index.html` - Removed default value from ranking input field
+- `database.js` - Removed defaults from database operations (lines 316, 382)
+
+### Testing:
+- **Comprehensive test suite**: Created `test_ranking_behavior.js` with multiple test scenarios
+- **All image types verified**: Major, subsidiary, and standalone images tested
+- **Database behavior confirmed**: Null values properly handled in SQLite operations
+- **Form validation updated**: Empty ranking allowed for all image types
+
 ## Historical Changes
 
 ## [0.2.3] - 2025-10-05

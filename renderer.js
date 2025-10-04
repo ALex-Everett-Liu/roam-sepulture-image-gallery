@@ -1620,23 +1620,22 @@ function showAddImageModal() {
 }
 
 /**
- * Handle ranking value based on image type
- * Returns null for empty subsidiary images, parsed float or default for others
+ * Handle ranking value - NO AUTO-FILL FOR ANY IMAGE TYPE
+ * Returns null for empty values, parsed float for valid numbers
  */
 function handleRankingValue(rankingInput, isMajor, groupId) {
     const rankingStr = rankingInput ? rankingInput.trim() : '';
-    const isSubsidiary = !isMajor && groupId;
 
-    // If subsidiary and ranking is empty, return null (no default)
-    if (isSubsidiary && !rankingStr) {
+    // If ranking is empty, return null (no default for ANY image type)
+    if (!rankingStr) {
         return null;
     }
 
-    // For non-subsidiary or when subsidiary has ranking, parse the value
+    // Parse the value - NO DEFAULT FALLBACK
     const parsedRanking = parseFloat(rankingStr);
 
-    // Return parsed value if valid, otherwise use default
-    return isNaN(parsedRanking) ? 5.0 : parsedRanking;
+    // Return parsed value if valid, null if invalid (no auto-fill)
+    return isNaN(parsedRanking) ? null : parsedRanking;
 }
 
 /**
@@ -1697,12 +1696,8 @@ function updateFormRequirements(image) {
             rankingLabel.style.color = '';
         }
 
-        // Auto-fill default ranking if empty for non-subsidiary images
-        if (!rankingInput.value) {
-            rankingInput.value = '5.0';
-        }
-
-        console.log('📝 Title and ranking set as required for major/standalone image');
+        // NO auto-fill - let users input ranking themselves
+        console.log('📝 Title and ranking set as required for major/standalone image (no auto-fill)');
     }
 }
 
@@ -1731,10 +1726,7 @@ function setupFormChangeListeners() {
             rankingLabel.textContent = 'Ranking (Optional):';
             rankingLabel.style.color = 'var(--secondary-color)';
 
-            // Clear auto-filled ranking if it's the default
-            if (rankingInput.value === '5.0') {
-                rankingInput.value = '';
-            }
+            // NO auto-fill clearing - let users control ranking themselves
         } else {
             titleInput.setAttribute('required', '');
             titleLabel.textContent = 'Title *:';
@@ -1743,10 +1735,7 @@ function setupFormChangeListeners() {
             rankingLabel.textContent = 'Ranking (0-10):';
             rankingLabel.style.color = '';
 
-            // Auto-fill default ranking if empty for non-subsidiary images
-            if (!rankingInput.value) {
-                rankingInput.value = '5.0';
-            }
+            // NO auto-fill - let users input ranking themselves
         }
     }
 
@@ -1780,15 +1769,8 @@ function showEditImageModal(image) {
 
     document.getElementById('image-title').value = image.title || '';
 
-    // Handle ranking - don't auto-fill for subsidiary images
-    const isSubsidiary = image.isMajor === false && image.groupId && image.majorImageId;
-    if (isSubsidiary && !image.ranking) {
-        // Don't auto-fill ranking for subsidiary images without existing ranking
-        document.getElementById('image-ranking').value = '';
-    } else {
-        // Use existing ranking or default for other image types
-        document.getElementById('image-ranking').value = image.ranking || '5.0';
-    }
+    // Handle ranking - NO auto-fill for ANY image type
+    document.getElementById('image-ranking').value = image.ranking || '';
 
     document.getElementById('image-src').value = image.src || '';
     document.getElementById('image-width').value = image.width || '';
@@ -1841,10 +1823,8 @@ async function saveImage(event) {
             formData.append('description', currentEditingImage.description || '');
             formData.append('src', currentEditingImage.src || '');
 
-            // Handle ranking - don't auto-fill for subsidiary images without ranking
-            const isSubsidiary = currentEditingImage.isMajor === false && currentEditingImage.groupId && currentEditingImage.majorImageId;
-            const rankingValue = currentEditingImage.ranking || (isSubsidiary ? '' : '5.0');
-            formData.append('ranking', rankingValue);
+            // Handle ranking - NO auto-fill for ANY image type
+            formData.append('ranking', currentEditingImage.ranking || '');
 
             formData.append('width', currentEditingImage.width || '');
             formData.append('height', currentEditingImage.height || '');
