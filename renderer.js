@@ -158,22 +158,23 @@ async function loadAvailableFiles() {
             const result = await response.json();
             availableFiles = result.files || [];
             populateJsonSelector();
-            console.log('Available JSON files:', availableFiles);
+            console.log('Available data files:', availableFiles);
         }
     } catch (error) {
         console.warn('Failed to load available files:', error);
     }
 }
 
-// Populate JSON file selector
+// Populate file selector (supports both JSON and SQLite database files)
 function populateJsonSelector() {
     const selector = document.getElementById('json-file-selector');
-    selector.innerHTML = '<option value="">Select a JSON file...</option>';
-    
+    selector.innerHTML = '<option value="">Select a data file...</option>';
+
     availableFiles.forEach(file => {
         const option = document.createElement('option');
         option.value = file.name;
-        option.textContent = `${file.name} (${file.size}) - ${file.location}`;
+        const fileType = file.type === 'sqlite' ? '🗄️' : '📄';
+        option.textContent = `${fileType} ${file.name} (${file.size}) - ${file.location}`;
         if (file.name === currentJsonFile) {
             option.selected = true;
         }
@@ -181,27 +182,28 @@ function populateJsonSelector() {
     });
 }
 
-// Load image data from server API
+// Load image data from server API (supports both JSON and SQLite database files)
 async function loadImageData() {
     showLoadingState();
     isLoading = true;
-    
+
     try {
-        console.log(`Attempting to load JSON from API: ${currentJsonFile}`);
-        
+        console.log(`Attempting to load data from API: ${currentJsonFile}`);
+
         const response = await fetch(`/api/data/${encodeURIComponent(currentJsonFile)}`);
-        
+
         if (!response.ok) {
             throw new Error(`Failed to load image data - Status: ${response.status}`);
         }
-        
+
         const result = await response.json();
         const data = result.data;
-        
-        console.log('Loaded JSON data:', data);
-        console.log('JSON structure keys:', Object.keys(data));
-        
-        // Handle both {images: [...]} and direct array formats
+
+        console.log('Loaded data:', data);
+        console.log('Data source:', result.source);
+        console.log('Data structure keys:', Object.keys(data));
+
+        // Handle both {images: [...]} and direct array formats (from both JSON and SQLite)
         if (Array.isArray(data)) {
             images = data;
             console.log('Loaded direct array format, length:', images.length);
@@ -209,30 +211,37 @@ async function loadImageData() {
             images = data.images;
             console.log('Loaded images property format, length:', images.length);
         } else {
-            console.warn('Unexpected JSON format, using fallback');
+            console.warn('Unexpected data format, using fallback');
             images = fallbackImages;
         }
-        
+
         console.log('Final images array length:', images.length);
-        
+
         // Apply filters after loading data
         filterAndSortImages();
-        
+
         // Update UI with filtered data
         renderTagCloud();
         renderGallery();
-        
-        console.log(`Successfully loaded ${images.length} images from ${currentJsonFile}`);
-        
+
+        console.log(`Successfully loaded ${images.length} images from ${currentJsonFile} (${result.source})`);
+
+        // Show toast notification with source info
+        if (result.source === 'sqlite') {
+            showToast(`Loaded ${images.length} images from SQLite database`, 'success');
+        } else if (result.source === 'json') {
+            showToast(`Loaded ${images.length} images from JSON file`, 'success');
+        }
+
     } catch (error) {
         console.warn(`Failed to load ${currentJsonFile}, using fallback data:`, error);
         images = fallbackImages;
-        
+
         // Apply filters for fallback too
         filterAndSortImages();
         renderTagCloud();
         renderGallery();
-        
+
         showToast(`Failed to load ${currentJsonFile}. Using sample data.`, 'warning');
     } finally {
         isLoading = false;

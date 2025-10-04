@@ -25,7 +25,7 @@ function createWindow() {
   });
 
   // Load the app
-  mainWindow.loadURL("http://localhost:3018");
+  mainWindow.loadURL(`http://localhost:${process.env.PORT || 3019}`);
 
   // Show window when ready to prevent visual flash
   mainWindow.once("ready-to-show", () => {

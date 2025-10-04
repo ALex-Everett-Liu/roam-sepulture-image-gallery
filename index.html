@@ -75,17 +75,17 @@
             </div>
             
             <div class="settings-row">
-                <label>Current JSON File:</label>
+                <label>Current Data File:</label>
                 <select id="json-file-selector" class="settings-input">
-                    <option value="">Select a JSON file...</option>
+                    <option value="">Select a data file...</option>
                 </select>
                 <button class="settings-button" onclick="loadSelectedJsonFile()">Load</button>
             </div>
-            
+
             <div class="settings-row">
-                <label>Custom JSON File:</label>
-                <input type="text" id="custom-json-file" class="settings-input" 
-                       placeholder="Enter JSON file path or name">
+                <label>Custom Data File:</label>
+                <input type="text" id="custom-json-file" class="settings-input"
+                       placeholder="Enter file path or name (.json or .db)">
                 <button class="settings-button" onclick="setCustomJsonFile()">Load Custom</button>
             </div>
             
@@ -146,13 +146,14 @@
             
             <div class="usage-instructions">
                 <h4>How to manage your gallery:</h4>
-                <p><strong>1. Load Data:</strong> Use the Settings panel to load JSON files with image data</p>
-                <p><strong>2. Browse Files:</strong> Use the file browser to select JSON files from your system</p>
+                <p><strong>1. Load Data:</strong> Use the Settings panel to load JSON files or SQLite databases with image data</p>
+                <p><strong>2. Browse Files:</strong> Use the file browser to select JSON files (.json) or SQLite databases (.db) from your system</p>
                 <p><strong>3. Image Groups:</strong> Create collections with major images and subsidiary images</p>
                 <p><strong>4. Import/Export:</strong> Use the buttons above to manage your gallery data</p>
                 <p><strong>5. Structure:</strong> Each image/video needs: title, description, src (for major images), and display properties</p>
                 <p><strong>6. Manual Sizing:</strong> Each image uses direct 'width' and 'height' properties for precise control - no complex grid system</p>
                 <p><strong>7. Video Support:</strong> Videos (.mp4, .webm, .mov, .avi, etc.) are automatically detected and displayed with controls</p>
+                <p><strong>8. Database Support:</strong> Convert JSON files to SQLite databases for faster loading using the conversion tool</p>
                 
                 <details class="json-example">
                     <summary>JSON Format Example</summary>

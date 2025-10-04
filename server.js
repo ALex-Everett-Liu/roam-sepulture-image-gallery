@@ -2,9 +2,10 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const cors = require("cors");
+const DatabaseManager = require("./database");
 
 const app = express();
-const PORT = 3018;
+const PORT = process.env.PORT || 3019;
 
 // Middleware
 app.use(cors());
@@ -42,19 +43,20 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-// Load JSON data from file
+// Load data from file (JSON or SQLite database)
 app.get("/api/data/:filename", async (req, res) => {
   try {
     const filename = req.params.filename;
-    
+
     // Security: Prevent directory traversal
     if (filename.includes("..") || filename.includes("/") || filename.includes("\\")) {
       return res.status(400).json({ error: "Invalid filename" });
     }
 
     let filePath;
-    
-    // Try different locations for the JSON file
+    const isDatabaseFile = filename.toLowerCase().endsWith('.db');
+
+    // Try different locations for the file
     const possiblePaths = [
       path.join(DATA_DIR, filename),
       path.join(__dirname, filename),
@@ -70,45 +72,95 @@ app.get("/api/data/:filename", async (req, res) => {
     }
 
     if (!filePath) {
-      return res.status(404).json({ 
-        error: `JSON file not found: ${filename}`,
+      return res.status(404).json({
+        error: `File not found: ${filename}`,
         searchedPaths: possiblePaths
       });
     }
 
-    const data = fs.readFileSync(filePath, 'utf8');
-    const jsonData = JSON.parse(data);
+    // Handle SQLite database files
+    if (isDatabaseFile) {
+      try {
+        // Validate that it's a proper SQLite database
+        const isValid = await DatabaseManager.isValidDatabase(filePath);
+        if (!isValid) {
+          return res.status(400).json({
+            error: "Invalid SQLite database file",
+            details: "The file does not appear to be a valid SQLite database with required tables"
+          });
+        }
 
-    res.json({
-      success: true,
-      data: jsonData,
-      filename: filename,
-      path: filePath,
-      size: formatFileSize(fs.statSync(filePath).size)
-    });
+        const dbManager = new DatabaseManager();
+        await dbManager.loadDatabase(filePath);
+
+        const data = dbManager.getAllImages();
+        const stats = dbManager.getDatabaseStats();
+        dbManager.close();
+
+        res.json({
+          success: true,
+          data: data,
+          filename: filename,
+          path: filePath,
+          size: formatFileSize(fs.statSync(filePath).size),
+          source: 'sqlite',
+          stats: stats
+        });
+
+      } catch (dbError) {
+        console.error("Error loading SQLite database:", dbError);
+        return res.status(500).json({
+          error: "Failed to load SQLite database",
+          details: dbError.message,
+        });
+      }
+    } else {
+      // Handle JSON files
+      try {
+        const data = fs.readFileSync(filePath, 'utf8');
+        const jsonData = JSON.parse(data);
+
+        res.json({
+          success: true,
+          data: jsonData,
+          filename: filename,
+          path: filePath,
+          size: formatFileSize(fs.statSync(filePath).size),
+          source: 'json'
+        });
+
+      } catch (jsonError) {
+        console.error("Error loading JSON data:", jsonError);
+        return res.status(500).json({
+          error: "Failed to load JSON data",
+          details: jsonError.message,
+        });
+      }
+    }
 
   } catch (error) {
-    console.error("Error loading JSON data:", error);
+    console.error("Error loading data file:", error);
     res.status(500).json({
-      error: "Failed to load JSON data",
+      error: "Failed to load data file",
       details: error.message,
     });
   }
 });
 
-// List available JSON files
+// List available data files (JSON and SQLite databases)
 app.get("/api/data", (req, res) => {
   try {
     const files = [];
-    
+
     // Check data directory
     if (fs.existsSync(DATA_DIR)) {
       const dataFiles = fs.readdirSync(DATA_DIR)
-        .filter(file => file.endsWith('.json'))
+        .filter(file => file.endsWith('.json') || file.endsWith('.db'))
         .map(file => ({
           name: file,
           path: path.join(DATA_DIR, file),
-          location: 'data'
+          location: 'data',
+          type: file.endsWith('.db') ? 'sqlite' : 'json'
         }));
       files.push(...dataFiles);
     }
@@ -117,22 +169,24 @@ app.get("/api/data", (req, res) => {
     const tempDir = path.join(__dirname, "temp");
     if (fs.existsSync(tempDir)) {
       const tempFiles = fs.readdirSync(tempDir)
-        .filter(file => file.endsWith('.json'))
+        .filter(file => file.endsWith('.json') || file.endsWith('.db'))
         .map(file => ({
           name: file,
           path: path.join(tempDir, file),
-          location: 'temp'
+          location: 'temp',
+          type: file.endsWith('.db') ? 'sqlite' : 'json'
         }));
       files.push(...tempFiles);
     }
 
     // Check root directory
     const rootFiles = fs.readdirSync(__dirname)
-      .filter(file => file.endsWith('.json'))
+      .filter(file => file.endsWith('.json') || file.endsWith('.db'))
       .map(file => ({
         name: file,
         path: path.join(__dirname, file),
-        location: 'root'
+        location: 'root',
+        type: file.endsWith('.db') ? 'sqlite' : 'json'
       }));
     files.push(...rootFiles);
 
@@ -198,17 +252,20 @@ app.get("/api/info", (req, res) => {
   res.json({
     name: "Roam Sepulture Image Gallery",
     version: "1.0.0",
-    description: "Electron-based Image Gallery with group functionality",
+    description: "Electron-based Image Gallery with group functionality and SQLite support",
     features: [
       "image-groups",
       "major-subsidiary",
       "filtering-sorting",
       "tag-management",
       "fullscreen-viewer",
-      "settings-management"
+      "settings-management",
+      "sqlite-database-support",
+      "json-database-support"
     ],
     dataDir: DATA_DIR,
-    supportedFormats: ["jpg", "jpeg", "png", "gif", "webp", "svg"]
+    supportedFormats: ["jpg", "jpeg", "png", "gif", "webp", "svg"],
+    supportedDataFormats: ["json", "sqlite"]
   });
 });
 
