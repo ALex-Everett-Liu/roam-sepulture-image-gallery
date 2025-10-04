@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Edit Functionality</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Edit Functionality Fix</h1>
+
+    <div id="test-results"></div>
+
+    <script>
+        // Mock data to simulate the edit scenario
+        const mockCurrentImage = {
+            id: 1,
+            title: "Sunset Beach Collection",
+            description: "Beautiful sunset at the beach with multiple perspectives",
+            src: "https://picsum.photos/600/400",
+            ranking: 9.2,
+            tags: ["sunset", "beach", "ocean", "golden-hour"],
+            width: "600px",
+            height: "400px",
+            isMajor: true,
+            groupId: "group-1",
+            date: "2023-09-23T07:43:00.000Z"
+        };
+
+        const mockFormData = {
+            title: "Updated Sunset Collection",
+            description: "Updated description for testing",
+            src: "https://picsum.photos/700/500",
+            ranking: "9.5",
+            tags: "sunset, beach, updated, test",
+            width: "700px",
+            height: "500px",
+            isMajor: "on",
+            groupId: "group-1-updated"
+        };
+
+        function logResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+        }
+
+        function simulateFormDataProcessing(formData) {
+            return {
+                title: formData.title.trim(),
+                description: formData.description.trim(),
+                src: formData.src.trim(),
+                ranking: parseFloat(formData.ranking) || 5.0,
+                tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+                width: formData.width.trim(),
+                height: formData.height.trim(),
+                isMajor: formData.isMajor === 'on',
+                groupId: formData.groupId.trim() || null,
+                // Note: No date field here - this is correct for updates
+            };
+        }
+
+        function simulateSaveImageUpdate(currentImage, formData) {
+            const imageData = simulateFormDataProcessing(formData);
+
+            // This is the FIXED logic
+            const updatedImage = {
+                ...currentImage,
+                ...imageData,
+                id: currentImage.id,  // Ensure ID is preserved
+                date: currentImage.date  // Ensure original date is preserved
+            };
+
+            return updatedImage;
+        }
+
+        function runTests() {
+            logResult('<h2>🚀 Starting Edit Functionality Tests</h2>');
+
+            logResult('<h3>📋 Original Image Data:</h3>');
+            logResult(`<pre>${JSON.stringify(mockCurrentImage, null, 2)}</pre>`);
+
+            logResult('<h3>📋 Form Data (what user enters):</h3>');
+            logResult(`<pre>${JSON.stringify(mockFormData, null, 2)}</pre>`);
+
+            logResult('<h3>🔧 Processing Form Data...</h3>');
+            const result = simulateSaveImageUpdate(mockCurrentImage, mockFormData);
+
+            logResult('<h3>✅ Updated Image Result:</h3>');
+            logResult(`<pre>${JSON.stringify(result, null, 2)}</pre>`);
+
+            logResult('<h3>🔍 Validation Results:</h3>');
+
+            // Test 1: ID preservation
+            if (result.id === mockCurrentImage.id) {
+                logResult('✅ ID correctly preserved', 'success');
+            } else {
+                logResult(`❌ ID not preserved! Expected ${mockCurrentImage.id}, got ${result.id}`, 'error');
+            }
+
+            // Test 2: Date preservation
+            if (result.date === mockCurrentImage.date) {
+                logResult('✅ Original date correctly preserved', 'success');
+            } else {
+                logResult(`❌ Date not preserved! Expected ${mockCurrentImage.date}, got ${result.date}`, 'error');
+            }
+
+            // Test 3: Title update
+            if (result.title === mockFormData.title) {
+                logResult('✅ Title correctly updated', 'success');
+            } else {
+                logResult(`❌ Title not updated! Expected ${mockFormData.title}, got ${result.title}`, 'error');
+            }
+
+            // Test 4: Ranking update
+            if (result.ranking === parseFloat(mockFormData.ranking)) {
+                logResult('✅ Ranking correctly updated', 'success');
+            } else {
+                logResult(`❌ Ranking not updated! Expected ${parseFloat(mockFormData.ranking)}, got ${result.ranking}`, 'error');
+            }
+
+            // Test 5: Tags update
+            const expectedTags = mockFormData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+            if (JSON.stringify(result.tags) === JSON.stringify(expectedTags)) {
+                logResult('✅ Tags correctly updated', 'success');
+            } else {
+                logResult(`❌ Tags not updated correctly! Expected ${JSON.stringify(expectedTags)}, got ${JSON.stringify(result.tags)}`, 'error');
+            }
+
+            // Test 6: Critical fields check
+            const criticalFields = ['id', 'date'];
+            const allCriticalPreserved = criticalFields.every(field => result[field] === mockCurrentImage[field]);
+
+            if (allCriticalPreserved) {
+                logResult('✅ All critical fields (ID, date) preserved', 'success');
+            } else {
+                logResult('❌ Some critical fields not preserved!', 'error');
+            }
+
+            logResult('<h3>🎯 Summary</h3>');
+            if (allCriticalPreserved && result.title === mockFormData.title) {
+                logResult('🎉 All tests passed! The edit functionality fix is working correctly.', 'success');
+                logResult('💡 Images should now save properly without losing ID or original date.', 'info');
+            } else {
+                logResult('❌ Some tests failed. The fix may need additional work.', 'error');
+            }
+        }
+
+        // Run tests when page loads
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>

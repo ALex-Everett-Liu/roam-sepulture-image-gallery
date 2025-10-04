@@ -14,7 +14,9 @@
       "Bash(pkill:*)",
       "Bash(PORT=3020 node server.js)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(python:*)",
+      "Bash(PORT=3021 node server.js)"
     ],
     "deny": [],
     "ask": []

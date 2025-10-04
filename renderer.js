@@ -195,6 +195,9 @@ function populateJsonSelector() {
 
 // Load image data from server API (supports both JSON and SQLite database files)
 async function loadImageData() {
+    console.log('🔄 loadImageData called - starting to load data');
+    console.log('📁 Current data file:', currentJsonFile);
+
     showLoadingState();
     isLoading = true;
 
@@ -229,9 +232,11 @@ async function loadImageData() {
         console.log('Final images array length:', images.length);
 
         // Apply filters after loading data
+        console.log('🔄 Applying filters and sorting...');
         filterAndSortImages();
 
         // Update UI with filtered data
+        console.log('🔄 Rendering UI components...');
         renderTagCloud();
         renderGallery();
 
@@ -257,6 +262,7 @@ async function loadImageData() {
     } finally {
         isLoading = false;
         hideLoadingState();
+        console.log('✅ loadImageData completed');
     }
 }
 
@@ -1604,12 +1610,25 @@ function showAddImageModal() {
 }
 
 function showEditImageModal(image) {
+    console.log('🖼️ showEditImageModal called with image:', image);
     isEditMode = true;
     currentEditingImage = image;
 
     document.getElementById('modal-title').textContent = 'Edit Image';
 
     // Pre-fill form with existing data
+    console.log('📝 Pre-filling form with image data:', {
+        title: image.title,
+        ranking: image.ranking,
+        src: image.src,
+        width: image.width,
+        height: image.height,
+        isMajor: image.isMajor,
+        groupId: image.groupId,
+        description: image.description,
+        tags: image.tags
+    });
+
     document.getElementById('image-title').value = image.title || '';
     document.getElementById('image-ranking').value = image.ranking || '5.0';
     document.getElementById('image-src').value = image.src || '';
@@ -1621,6 +1640,7 @@ function showEditImageModal(image) {
     document.getElementById('image-description').value = image.description || '';
     document.getElementById('image-tags').value = (image.tags || []).join(', ');
 
+    console.log('🎨 Modal opened for editing');
     document.getElementById('image-editor-modal').style.display = 'flex';
 }
 
@@ -1631,54 +1651,122 @@ function closeImageEditor() {
 }
 
 async function saveImage(event) {
-    event.preventDefault();
+    console.log('💾 saveImage called - function triggered');
+    console.log('📝 isEditMode:', isEditMode, 'currentEditingImage:', currentEditingImage);
 
-    const formData = new FormData(event.target);
+    // Handle both form submission and direct button clicks
+    let formData;
+    let isFormSubmission = false;
+
+    if (event && event.target && event.target.tagName === 'FORM') {
+        // This is a form submission
+        console.log('📋 Form submission detected');
+        event.preventDefault();
+        formData = new FormData(event.target);
+        isFormSubmission = true;
+    } else {
+        // This is a direct button click (emergency test)
+        console.log('🧪 Direct button click detected (emergency test)');
+        console.log('🧪 Creating form data from currentEditingImage');
+
+        // Create form data from the current editing image
+        formData = new FormData();
+        if (currentEditingImage) {
+            formData.append('title', currentEditingImage.title || '');
+            formData.append('description', currentEditingImage.description || '');
+            formData.append('src', currentEditingImage.src || '');
+            formData.append('ranking', currentEditingImage.ranking || '5.0');
+            formData.append('width', currentEditingImage.width || '');
+            formData.append('height', currentEditingImage.height || '');
+            formData.append('isMajor', currentEditingImage.isMajor !== false ? 'on' : '');
+            formData.append('groupId', currentEditingImage.groupId || '');
+            formData.append('tags', (currentEditingImage.tags || []).join(', '));
+        }
+    }
+    console.log('📋 Raw form data:');
+    for (let [key, value] of formData.entries()) {
+        console.log(`  ${key}: "${value}"`);
+    }
+
     const imageData = {
         title: formData.get('title').trim(),
         description: formData.get('description').trim(),
         src: formData.get('src').trim(),
         ranking: parseFloat(formData.get('ranking')) || 5.0,
         tags: formData.get('tags').split(',').map(tag => tag.trim()).filter(tag => tag),
-        width: formData.get('width').trim(),
-        height: formData.get('height').trim(),
+        width: formData.get('width').trim() || null,  // Convert empty string to null
+        height: formData.get('height').trim() || null,  // Convert empty string to null
         isMajor: formData.get('isMajor') === 'on',
         groupId: formData.get('groupId').trim() || null,
-        date: new Date().toISOString()
+        // Don't set date here - preserve original date for updates
     };
+
+    console.log('🔄 Processed imageData:', imageData);
+    console.log('📏 Width/Height details:', {
+        originalWidth: currentEditingImage?.width,
+        originalHeight: currentEditingImage?.height,
+        newWidth: imageData.width,
+        newHeight: imageData.height
+    });
 
     // Validate required fields
     if (!imageData.title) {
+        console.log('❌ Validation failed: Title is required');
         showToast('Title is required', 'error');
         return;
     }
 
+    console.log('✅ Validation passed');
+
     try {
         if (isEditMode && currentEditingImage) {
-            // Update existing image
+            // Update existing image - preserve critical fields like id
+            console.log('📝 Updating image - Original:', currentEditingImage);
+            console.log('📝 Form data:', imageData);
+
             const updatedImage = {
                 ...currentEditingImage,
-                ...imageData
+                ...imageData,
+                id: currentEditingImage.id,  // Ensure ID is preserved
+                date: currentEditingImage.date  // Ensure original date is preserved
             };
 
+            console.log('🔀 Object merging details:', {
+                originalKeys: Object.keys(currentEditingImage),
+                formDataKeys: Object.keys(imageData),
+                finalKeys: Object.keys(updatedImage),
+                beforeMerge: currentEditingImage,
+                afterMerge: updatedImage
+            });
+
+            console.log('📝 Final updated image:', updatedImage);
+
             await updateImage(updatedImage);
+            console.log('✅ updateImage completed successfully');
             showToast('Image updated successfully', 'success');
         } else {
             // Add new image
+            console.log('➕ Adding new image');
             const newImage = {
                 id: Math.max(...images.map(img => img.id), 0) + 1,
-                ...imageData
+                ...imageData,
+                date: new Date().toISOString()  // Only set date for new images
             };
 
+            console.log('📝 New image data:', newImage);
             await addImage(newImage);
+            console.log('✅ addImage completed successfully');
             showToast('Image added successfully', 'success');
         }
 
+        console.log('🔄 Refreshing gallery data...');
         closeImageEditor();
         await loadImageData(); // Refresh the gallery
+        console.log('✅ Gallery refreshed successfully');
 
     } catch (error) {
-        console.error('Error saving image:', error);
+        console.error('❌ Error saving image:', error);
+        console.error('Error stack:', error.stack);
         showToast(`Error saving image: ${error.message}`, 'error');
     }
 }
@@ -1711,28 +1799,43 @@ async function addImage(image) {
 }
 
 async function updateImage(image) {
+    console.log('📡 updateImage called with:', image);
+    console.log('📡 currentJsonFile:', currentJsonFile);
+
     try {
+        const requestBody = {
+            image: image,
+            dataFile: currentJsonFile
+        };
+        console.log('📡 Request body:', JSON.stringify(requestBody, null, 2));
+
         const response = await fetch('/api/images', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                image: image,
-                dataFile: currentJsonFile
-            })
+            body: JSON.stringify(requestBody)
         });
 
+        console.log('📡 Response status:', response.status, response.statusText);
+
         if (!response.ok) {
+            const errorText = await response.text();
+            console.log('📡 Error response:', errorText);
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
         const result = await response.json();
+        console.log('📡 Response result:', result);
+
         if (!result.success) {
             throw new Error(result.error || 'Failed to update image');
         }
 
+        console.log('✅ updateImage completed successfully');
+
     } catch (error) {
+        console.error('❌ updateImage failed:', error);
         throw new Error(`Failed to update image: ${error.message}`);
     }
 }

@@ -280,6 +280,14 @@
             </div>
 
             <form id="image-editor-form" onsubmit="saveImage(event)">
+                <!-- EMERGENCY DEBUGGING - This should log when form is submitted -->
+                <div style="background: red; color: white; padding: 10px; margin: 10px 0; font-weight: bold;">
+                    🚨 EMERGENCY DEBUGGING 🚨<br>
+                    Form submission should trigger saveImage() function<br>
+                    Check browser console immediately after clicking Save!<br>
+                    If you don't see logs, the form submission is BROKEN!
+                </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label for="image-title">Title *:</label>
@@ -347,6 +355,17 @@
                 </div>
 
                 <div class="form-actions">
+                    <!-- EMERGENCY DEBUG BUTTONS -->
+                    <div style="background: yellow; padding: 10px; margin: 10px 0;">
+                        <strong>🧪 EMERGENCY TEST BUTTONS:</strong><br>
+                        <button type="button" onclick="console.log('🧪 TEST: Direct saveImage call'); saveImage(event);" style="background: orange;">
+                            🧪 DIRECT TEST (bypass form)
+                        </button>
+                        <button type="button" onclick="console.log('🧪 TEST: Modal data check'); console.log('currentEditingImage:', currentEditingImage); console.log('isEditMode:', isEditMode);" style="background: lightblue;">
+                            🧪 CHECK MODAL DATA
+                        </button>
+                    </div>
+
                     <button type="button" class="btn-secondary" onclick="closeImageEditor()">Cancel</button>
                     <button type="submit" class="btn-primary">Save Image</button>
                 </div>
