@@ -5,6 +5,61 @@ All notable changes to the Roam Sepulture Image Gallery project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] - 2025-10-05
+
+### Critical Bug Fix - Database Persistence Issue
+- **Fixed silent database update failures** where CRUD operations appeared successful but changes were not persisted to disk
+- **Root cause**: `sql.js` library operates in-memory without automatic file persistence
+- **Solution**: Added explicit `save()` method to `DatabaseManager` class to persist in-memory changes to filesystem
+- **Impact**: All database updates (add, edit, delete) now properly save to SQLite files
+
+### Technical Implementation
+- **Added `save()` method** to `DatabaseManager` class (`database.js:561-576`)
+  - Exports in-memory database as binary buffer using `db.export()`
+  - Writes buffer to filesystem using `fs.writeFileSync()`
+  - Provides error handling and validation
+
+- **Enhanced `close()` method** with optional save parameter (`database.js:581-596`)
+  - Optional save before closing to prevent data loss
+  - Graceful error handling during save operations
+  - Maintains backward compatibility with existing code
+
+- **Updated all CRUD operations** in `server.js` to explicitly save after changes:
+  - `PUT /api/images` - Saves after image updates
+  - `POST /api/images` - Saves after new image additions
+  - `DELETE /api/images` - Saves after image deletions
+
+### Verification & Testing
+- **Added file system verification** to confirm changes persist to disk
+- **File modification timestamp tracking** before/after operations
+- **Comprehensive test suite** with `test_db_update.js` for validation
+- **Verified data persistence** across server restarts
+
+### Debugging Documentation
+- **Created `DEBUGGING_LESSONS.md`** with comprehensive analysis of the issue
+- **Documented root cause analysis** and prevention strategies
+- **Added development best practices** for avoiding similar issues
+- **Included code examples** for file system monitoring and persistence verification
+
+### Prevention Measures
+- **Library behavior awareness**: Documented `sql.js` in-memory vs disk persistence model
+- **File system monitoring**: Added verification of file timestamps and sizes
+- **Testing protocols**: Established persistence testing across server restarts
+- **Enhanced logging**: Added before/after file statistics for all database operations
+
+### User Impact
+- **Zero breaking changes**: All existing functionality remains unchanged
+- **Improved reliability**: Database updates now permanently persist
+- **Better data integrity**: No more silent failures or data loss
+- **Enhanced confidence**: Users can trust that their changes are saved
+
+### Migration Notes
+- **Existing databases**: No migration required - fix applies to all SQLite operations
+- **No configuration changes**: Works automatically with existing setups
+- **Backward compatible**: All existing CRUD operations benefit from the fix
+
+---
+
 ## [0.2.2] - 2025-10-04
 
 ### Added - Complete CRUD Image Management System

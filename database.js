@@ -354,15 +354,20 @@ class DatabaseManager {
      * Update existing image in database
      */
     async updateImage(image) {
+        console.log('🗄️ DatabaseManager.updateImage called with:', image);
+        console.log('🗄️ DATABASE UPDATE FUNCTION TRIGGERED - This should appear if SQLite is being used!');
+
         if (!this.db) {
             throw new Error('Database not loaded');
         }
 
         try {
             // Start transaction
+            console.log('🔄 Starting database transaction...');
             this.db.run('BEGIN TRANSACTION');
 
             // Update image
+            console.log('📝 Updating image in database...');
             const stmt = this.db.prepare(`
                 UPDATE images
                 SET title = ?, description = ?, src = ?, ranking = ?, width = ?, height = ?,
@@ -370,7 +375,7 @@ class DatabaseManager {
                 WHERE id = ?
             `);
 
-            const result = stmt.run([
+            const updateParams = [
                 image.title,
                 image.description || '',
                 image.src || '',
@@ -382,23 +387,66 @@ class DatabaseManager {
                 image.majorImageId || null,
                 image.date || new Date().toISOString(),
                 image.id
-            ]);
+            ];
+            console.log('📝 Update parameters:', updateParams);
+            console.log('📝 Update parameter mapping:', {
+                title: updateParams[0],
+                description: updateParams[1],
+                src: updateParams[2],
+                ranking: updateParams[3],
+                width: updateParams[4],
+                height: updateParams[5],
+                is_major: updateParams[6],
+                group_id: updateParams[7],
+                major_image_id: updateParams[8],
+                date_added: updateParams[9],
+                id: updateParams[10]
+            });
+
+            const result = stmt.run(updateParams);
             stmt.free();
+            console.log('📝 SQL Update Result:', {
+                changes: result.changes,
+                lastInsertRowid: result.lastInsertRowid
+            });
+
+            console.log('📝 Update result:', result);
 
             if (result.changes === 0) {
+                console.log('❌ No rows were updated - image not found');
                 throw new Error(`Image with ID ${image.id} not found`);
             }
 
+            console.log('✅ Image updated successfully');
+
+            // Verify the update actually worked
+            console.log('🔍 Verifying update...');
+            const verifyStmt = this.db.prepare('SELECT width, height FROM images WHERE id = ?');
+            verifyStmt.bind([image.id]);
+            if (verifyStmt.step()) {
+                const result = verifyStmt.getAsObject();
+                console.log('🔍 Verification - Current values in database:', {
+                    width: result.width,
+                    height: result.height
+                });
+            }
+            verifyStmt.free();
+
             // Delete existing tag relationships
+            console.log('🗑️ Deleting existing tag relationships...');
             const deleteRelStmt = this.db.prepare('DELETE FROM image_tags WHERE image_id = ?');
-            deleteRelStmt.run([image.id]);
+            const deleteResult = deleteRelStmt.run([image.id]);
             deleteRelStmt.free();
+            console.log('🗑️ Deleted', deleteResult.changes, 'tag relationships');
 
             // Add new tag relationships
             if (image.tags && Array.isArray(image.tags) && image.tags.length > 0) {
+                console.log('🏷️ Processing tags:', image.tags);
                 for (const tagName of image.tags) {
+                    console.log('🏷️ Processing tag:', tagName);
                     // Get or create tag
                     const tagId = this.getOrCreateTag(tagName);
+                    console.log('🏷️ Got tag ID:', tagId);
 
                     // Create image-tag relationship
                     const relStmt = this.db.prepare(`
@@ -407,14 +455,20 @@ class DatabaseManager {
                     `);
                     relStmt.run([image.id, tagId]);
                     relStmt.free();
+                    console.log('🏷️ Created tag relationship for:', tagName);
                 }
+            } else {
+                console.log('🏷️ No tags to process');
             }
 
             // Commit transaction
+            console.log('✅ Committing transaction...');
             this.db.run('COMMIT');
+            console.log('✅ Transaction committed successfully');
 
         } catch (error) {
             // Rollback transaction on error
+            console.log('❌ Error occurred, rolling back transaction...');
             this.db.run('ROLLBACK');
             console.error('Error updating image in database:', error);
             throw new Error(`Failed to update image: ${error.message}`);
@@ -502,10 +556,39 @@ class DatabaseManager {
     }
 
     /**
+     * Save database to file
+     */
+    save() {
+        if (!this.db || !this.dbFilePath) {
+            throw new Error('Database not loaded or file path not set');
+        }
+
+        try {
+            // Export the database as a binary buffer
+            const data = this.db.export();
+            // Write the buffer to the file
+            fs.writeFileSync(this.dbFilePath, data);
+            return true;
+        } catch (error) {
+            console.error('Error saving database:', error);
+            throw new Error(`Failed to save database: ${error.message}`);
+        }
+    }
+
+    /**
      * Close database connection
      */
-    close() {
+    close(save = false) {
         if (this.db) {
+            // Save before closing if requested
+            if (save && this.dbFilePath) {
+                try {
+                    this.save();
+                } catch (error) {
+                    console.error('Failed to save database before closing:', error);
+                    // Continue with closing even if save fails
+                }
+            }
             this.db.close();
             this.db = null;
             this.dbFilePath = null;

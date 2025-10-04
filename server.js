@@ -12,6 +12,14 @@ app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log('🌐 INCOMING REQUEST:', req.method, req.url);
+  console.log('🌐 Headers:', req.headers);
+  console.log('🌐 Body:', req.body);
+  next();
+});
+
 // Ensure data directory exists
 const DATA_DIR = path.join(__dirname, "data");
 if (!fs.existsSync(DATA_DIR)) {
@@ -321,6 +329,11 @@ app.post("/api/images", async (req, res) => {
       const dbManager = new DatabaseManager();
       await dbManager.loadDatabase(filePath);
       await dbManager.addImage(image);
+
+      // Save the database back to file
+      console.log('💾 Saving database after adding image...');
+      dbManager.save();
+
       dbManager.close();
     } else {
       // Handle JSON file
@@ -353,18 +366,29 @@ app.post("/api/images", async (req, res) => {
 
 // Update existing image
 app.put("/api/images", async (req, res) => {
+  console.log('🔄 PUT /api/images - Update request received');
+  console.log('📋 Request body:', JSON.stringify(req.body, null, 2));
+
   try {
+    console.log('🚨 SERVER PUT /api/images - ENTERING FUNCTION');
+    console.log('🚨 THIS SHOULD APPEAR IMMEDIATELY WHEN SAVE IS CLICKED');
+
     const { image, dataFile } = req.body;
+    console.log('🚨 Request body parsed:', { image: !!image, dataFile: !!dataFile, hasImageId: !!image?.id });
 
     if (!image || !dataFile || !image.id) {
+      console.log('❌ Missing required parameters:', { image: !!image, dataFile: !!dataFile, imageId: !!image?.id });
       return res.status(400).json({
         success: false,
         error: "Missing required parameters: image, dataFile, and image.id"
       });
     }
 
+    console.log('📝 Update request for image ID:', image.id, 'in file:', dataFile);
+
     let filePath;
     const isDatabaseFile = dataFile.toLowerCase().endsWith('.db');
+    console.log('🗄️ File type detected:', isDatabaseFile ? 'SQLite database' : 'JSON file');
 
     // Find the data file
     const possiblePaths = [
@@ -373,14 +397,18 @@ app.put("/api/images", async (req, res) => {
       path.resolve(dataFile)
     ];
 
+    console.log('🔍 Searching for data file in paths:', possiblePaths);
+
     for (const tryPath of possiblePaths) {
       if (fs.existsSync(tryPath)) {
         filePath = tryPath;
+        console.log('✅ Found data file at:', filePath);
         break;
       }
     }
 
     if (!filePath) {
+      console.log('❌ Data file not found in any of the searched paths');
       return res.status(404).json({
         success: false,
         error: `Data file not found: ${dataFile}`
@@ -389,12 +417,40 @@ app.put("/api/images", async (req, res) => {
 
     if (isDatabaseFile) {
       // Handle SQLite database
+      console.log('🔄 Processing SQLite database update...');
+      console.log('🔄 Loading database from:', filePath);
+
+      // Get file info BEFORE update
+      const statsBefore = fs.statSync(filePath);
+      console.log('📊 Database file BEFORE update:');
+      console.log('  Size:', statsBefore.size, 'bytes');
+      console.log('  Modified:', statsBefore.mtime);
+
       const dbManager = new DatabaseManager();
       await dbManager.loadDatabase(filePath);
+      console.log('✅ Database loaded successfully');
+
+      console.log('🔄 Calling dbManager.updateImage with:', image);
       await dbManager.updateImage(image);
+      console.log('✅ Database update completed');
+
+      // Save the database back to file
+      console.log('💾 Saving database to file...');
+      dbManager.save();
+      console.log('✅ Database saved successfully');
+
+      // Get file info AFTER update
+      const statsAfter = fs.statSync(filePath);
+      console.log('📊 Database file AFTER update:');
+      console.log('  Size:', statsAfter.size, 'bytes');
+      console.log('  Modified:', statsAfter.mtime);
+      console.log('  Size change:', statsAfter.size - statsBefore.size, 'bytes');
+      console.log('  File was modified:', statsAfter.mtime.getTime() !== statsBefore.mtime.getTime());
+
       dbManager.close();
     } else {
       // Handle JSON file
+      console.log('🔄 Processing JSON file update...');
       const data = fs.readFileSync(filePath, 'utf8');
       const jsonData = JSON.parse(data);
 
@@ -407,18 +463,27 @@ app.put("/api/images", async (req, res) => {
         throw new Error(`Image with ID ${image.id} not found`);
       }
 
+      console.log('📝 Found image at index:', imageIndex);
+      console.log('📝 Original image data:', JSON.stringify(jsonData.images[imageIndex], null, 2));
+      console.log('📝 New image data:', JSON.stringify(image, null, 2));
+
       jsonData.images[imageIndex] = image;
       fs.writeFileSync(filePath, JSON.stringify(jsonData, null, 2));
+      console.log('✅ JSON file updated successfully');
     }
 
+    console.log('✅ Update operation completed successfully');
+    console.log('🚨 ABOUT TO SEND SUCCESS RESPONSE TO CLIENT');
     res.json({
       success: true,
       message: "Image updated successfully",
       imageId: image.id
     });
+    console.log('🚨 SUCCESS RESPONSE SENT TO CLIENT');
 
   } catch (error) {
-    console.error("Error updating image:", error);
+    console.error("❌ Error updating image:", error);
+    console.error("Error stack:", error.stack);
     res.status(500).json({
       success: false,
       error: "Failed to update image",
@@ -468,6 +533,11 @@ app.delete("/api/images", async (req, res) => {
       const dbManager = new DatabaseManager();
       await dbManager.loadDatabase(filePath);
       await dbManager.deleteImage(imageId);
+
+      // Save the database back to file
+      console.log('💾 Saving database after deleting image...');
+      dbManager.save();
+
       dbManager.close();
     } else {
       // Handle JSON file
