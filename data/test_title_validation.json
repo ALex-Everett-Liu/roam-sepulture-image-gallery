@@ -1,0 +1,56 @@
+{
+  "images": [
+    {
+      "id": 1,
+      "title": "Major Image - Title Required",
+      "description": "This is a major image - title should be required",
+      "src": null,
+      "ranking": 9,
+      "tags": [
+        "major",
+        "test"
+      ],
+      "isMajor": true,
+      "groupId": "test-group"
+    },
+    {
+      "id": 2,
+      "title": "Subsidiary Image - Title Optional",
+      "description": "This is a subsidiary image - title should be optional",
+      "src": null,
+      "ranking": 8,
+      "tags": [
+        "subsidiary",
+        "test"
+      ],
+      "isMajor": false,
+      "groupId": "test-group",
+      "majorImageId": 1
+    },
+    {
+      "id": 3,
+      "title": "Standalone Image - Title Required",
+      "description": "This is a standalone image - title should be required",
+      "src": null,
+      "ranking": 7,
+      "tags": [
+        "standalone",
+        "test"
+      ]
+    },
+    {
+      "id": 4,
+      "title": "",
+      "description": "Subsidiary with empty title - should be allowed",
+      "src": null,
+      "ranking": 6,
+      "tags": [
+        "subsidiary",
+        "empty-title"
+      ],
+      "isMajor": false,
+      "groupId": "test-group",
+      "majorImageId": 1
+    }
+  ]
+}

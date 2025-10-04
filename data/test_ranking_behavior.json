@@ -1,0 +1,56 @@
+{
+  "images": [
+    {
+      "id": 1,
+      "title": "Major Image - Ranking Required",
+      "description": "This is a major image - ranking should be required and auto-filled",
+      "src": null,
+      "ranking": 9,
+      "tags": [
+        "major",
+        "test"
+      ],
+      "isMajor": true,
+      "groupId": "test-group"
+    },
+    {
+      "id": 2,
+      "title": "Subsidiary Image - Ranking Optional",
+      "description": "This is a subsidiary image - ranking should be optional and not auto-filled",
+      "src": null,
+      "ranking": null,
+      "tags": [
+        "subsidiary",
+        "test"
+      ],
+      "isMajor": false,
+      "groupId": "test-group",
+      "majorImageId": 1
+    },
+    {
+      "id": 3,
+      "title": "Subsidiary Image - With Ranking",
+      "description": "This subsidiary image has ranking - should preserve existing value",
+      "src": null,
+      "ranking": 7.5,
+      "tags": [
+        "subsidiary",
+        "with-ranking"
+      ],
+      "isMajor": false,
+      "groupId": "test-group",
+      "majorImageId": 1
+    },
+    {
+      "id": 4,
+      "title": "Standalone Image - Ranking Required",
+      "description": "This is a standalone image - ranking should be required and auto-filled",
+      "src": null,
+      "ranking": null,
+      "tags": [
+        "standalone",
+        "test"
+      ]
+    }
+  ]
+}

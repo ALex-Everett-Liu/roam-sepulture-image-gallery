@@ -1602,11 +1602,160 @@ function showAddImageModal() {
     document.getElementById('image-editor-form').reset();
 
     // Set default values
-    document.getElementById('image-ranking').value = '5.0';
     document.getElementById('image-type').value = 'image';
     document.getElementById('is-major').checked = true;
+    // Don't auto-fill ranking - let users decide or leave empty for subsidiaries
+
+    // Set form requirements for new image (title required by default)
+    const titleInput = document.getElementById('image-title');
+    const titleLabel = document.getElementById('image-title-label');
+    titleInput.setAttribute('required', '');
+    titleLabel.textContent = 'Title *:';
+    titleLabel.style.color = '';
 
     document.getElementById('image-editor-modal').style.display = 'flex';
+
+    // Setup form change listeners for dynamic requirement updates
+    setupFormChangeListeners();
+}
+
+/**
+ * Handle ranking value based on image type
+ * Returns null for empty subsidiary images, parsed float or default for others
+ */
+function handleRankingValue(rankingInput, isMajor, groupId) {
+    const rankingStr = rankingInput ? rankingInput.trim() : '';
+    const isSubsidiary = !isMajor && groupId;
+
+    // If subsidiary and ranking is empty, return null (no default)
+    if (isSubsidiary && !rankingStr) {
+        return null;
+    }
+
+    // For non-subsidiary or when subsidiary has ranking, parse the value
+    const parsedRanking = parseFloat(rankingStr);
+
+    // Return parsed value if valid, otherwise use default
+    return isNaN(parsedRanking) ? 5.0 : parsedRanking;
+}
+
+/**
+ * Update form requirements based on image type
+ * Makes title and ranking optional for subsidiary images
+ */
+function updateFormRequirements(image) {
+    const titleInput = document.getElementById('image-title');
+    const titleLabel = document.getElementById('image-title-label');
+    const rankingInput = document.getElementById('image-ranking');
+    const rankingLabel = document.getElementById('image-ranking-label');
+
+    // Determine if this is a subsidiary image
+    const isSubsidiary = image.isMajor === false && image.groupId && image.majorImageId;
+
+    if (isSubsidiary) {
+        // Make title and ranking optional for subsidiary images
+        titleInput.removeAttribute('required');
+        titleLabel.textContent = 'Title (Optional):';
+        titleLabel.style.color = 'var(--secondary-color)';
+
+        // Don't auto-fill ranking for subsidiary images
+        if (!rankingLabel) {
+            // Create label element if it doesn't exist
+            const rankingGroup = rankingInput.closest('.form-group');
+            const newLabel = document.createElement('label');
+            newLabel.id = 'image-ranking-label';
+            newLabel.htmlFor = 'image-ranking';
+            newLabel.textContent = 'Ranking (Optional):';
+            rankingGroup.insertBefore(newLabel, rankingInput);
+        } else {
+            rankingLabel.textContent = 'Ranking (Optional):';
+            rankingLabel.style.color = 'var(--secondary-color)';
+        }
+
+        // Clear auto-filled ranking if it's the default and we're editing
+        if (isEditMode && rankingInput.value === '5.0' && !image.ranking) {
+            rankingInput.value = '';
+        }
+
+        console.log('📝 Title and ranking set as optional for subsidiary image');
+    } else {
+        // Make title and ranking required for major and standalone images
+        titleInput.setAttribute('required', '');
+        titleLabel.textContent = 'Title *:';
+        titleLabel.style.color = '';
+
+        if (!rankingLabel) {
+            // Create label element if it doesn't exist
+            const rankingGroup = rankingInput.closest('.form-group');
+            const newLabel = document.createElement('label');
+            newLabel.id = 'image-ranking-label';
+            newLabel.htmlFor = 'image-ranking';
+            newLabel.textContent = 'Ranking (0-10):';
+            rankingGroup.insertBefore(newLabel, rankingInput);
+        } else {
+            rankingLabel.textContent = 'Ranking (0-10):';
+            rankingLabel.style.color = '';
+        }
+
+        // Auto-fill default ranking if empty for non-subsidiary images
+        if (!rankingInput.value) {
+            rankingInput.value = '5.0';
+        }
+
+        console.log('📝 Title and ranking set as required for major/standalone image');
+    }
+}
+
+/**
+ * Handle form field changes to update requirements dynamically
+ */
+function setupFormChangeListeners() {
+    const isMajorCheckbox = document.getElementById('is-major');
+    const groupIdInput = document.getElementById('group-id');
+
+    function updateRequirementsFromForm() {
+        const isMajor = isMajorCheckbox.checked;
+        const hasGroupId = groupIdInput.value.trim() !== '';
+        const isSubsidiary = !isMajor && hasGroupId;
+
+        const titleInput = document.getElementById('image-title');
+        const titleLabel = document.getElementById('image-title-label');
+        const rankingInput = document.getElementById('image-ranking');
+        const rankingLabel = document.getElementById('image-ranking-label');
+
+        if (isSubsidiary) {
+            titleInput.removeAttribute('required');
+            titleLabel.textContent = 'Title (Optional):';
+            titleLabel.style.color = 'var(--secondary-color)';
+
+            rankingLabel.textContent = 'Ranking (Optional):';
+            rankingLabel.style.color = 'var(--secondary-color)';
+
+            // Clear auto-filled ranking if it's the default
+            if (rankingInput.value === '5.0') {
+                rankingInput.value = '';
+            }
+        } else {
+            titleInput.setAttribute('required', '');
+            titleLabel.textContent = 'Title *:';
+            titleLabel.style.color = '';
+
+            rankingLabel.textContent = 'Ranking (0-10):';
+            rankingLabel.style.color = '';
+
+            // Auto-fill default ranking if empty for non-subsidiary images
+            if (!rankingInput.value) {
+                rankingInput.value = '5.0';
+            }
+        }
+    }
+
+    // Add event listeners
+    isMajorCheckbox.addEventListener('change', updateRequirementsFromForm);
+    groupIdInput.addEventListener('input', updateRequirementsFromForm);
+
+    // Initial setup
+    updateRequirementsFromForm();
 }
 
 function showEditImageModal(image) {
@@ -1630,7 +1779,17 @@ function showEditImageModal(image) {
     });
 
     document.getElementById('image-title').value = image.title || '';
-    document.getElementById('image-ranking').value = image.ranking || '5.0';
+
+    // Handle ranking - don't auto-fill for subsidiary images
+    const isSubsidiary = image.isMajor === false && image.groupId && image.majorImageId;
+    if (isSubsidiary && !image.ranking) {
+        // Don't auto-fill ranking for subsidiary images without existing ranking
+        document.getElementById('image-ranking').value = '';
+    } else {
+        // Use existing ranking or default for other image types
+        document.getElementById('image-ranking').value = image.ranking || '5.0';
+    }
+
     document.getElementById('image-src').value = image.src || '';
     document.getElementById('image-width').value = image.width || '';
     document.getElementById('image-height').value = image.height || '';
@@ -1640,8 +1799,14 @@ function showEditImageModal(image) {
     document.getElementById('image-description').value = image.description || '';
     document.getElementById('image-tags').value = (image.tags || []).join(', ');
 
+    // Update form requirements based on image type
+    updateFormRequirements(image);
+
     console.log('🎨 Modal opened for editing');
     document.getElementById('image-editor-modal').style.display = 'flex';
+
+    // Setup form change listeners for dynamic requirement updates
+    setupFormChangeListeners();
 }
 
 function closeImageEditor() {
@@ -1675,7 +1840,12 @@ async function saveImage(event) {
             formData.append('title', currentEditingImage.title || '');
             formData.append('description', currentEditingImage.description || '');
             formData.append('src', currentEditingImage.src || '');
-            formData.append('ranking', currentEditingImage.ranking || '5.0');
+
+            // Handle ranking - don't auto-fill for subsidiary images without ranking
+            const isSubsidiary = currentEditingImage.isMajor === false && currentEditingImage.groupId && currentEditingImage.majorImageId;
+            const rankingValue = currentEditingImage.ranking || (isSubsidiary ? '' : '5.0');
+            formData.append('ranking', rankingValue);
+
             formData.append('width', currentEditingImage.width || '');
             formData.append('height', currentEditingImage.height || '');
             formData.append('isMajor', currentEditingImage.isMajor !== false ? 'on' : '');
@@ -1692,7 +1862,7 @@ async function saveImage(event) {
         title: formData.get('title').trim(),
         description: formData.get('description').trim(),
         src: formData.get('src').trim(),
-        ranking: parseFloat(formData.get('ranking')) || 5.0,
+        ranking: handleRankingValue(formData.get('ranking'), formData.get('isMajor') === 'on', formData.get('groupId').trim()),
         tags: formData.get('tags').split(',').map(tag => tag.trim()).filter(tag => tag),
         width: formData.get('width').trim() || null,  // Convert empty string to null
         height: formData.get('height').trim() || null,  // Convert empty string to null
@@ -1709,11 +1879,17 @@ async function saveImage(event) {
         newHeight: imageData.height
     });
 
-    // Validate required fields
-    if (!imageData.title) {
-        console.log('❌ Validation failed: Title is required');
-        showToast('Title is required', 'error');
+    // Validate required fields based on image type
+    const isSubsidiary = !imageData.isMajor && imageData.groupId;
+    if (!imageData.title && !isSubsidiary) {
+        console.log('❌ Validation failed: Title is required for major and standalone images');
+        showToast('Title is required for major and standalone images', 'error');
         return;
+    }
+
+    // For subsidiary images, title is optional but we can warn if it's empty
+    if (!imageData.title && isSubsidiary) {
+        console.log('⚠️ Title is empty for subsidiary image (this is allowed)');
     }
 
     console.log('✅ Validation passed');
