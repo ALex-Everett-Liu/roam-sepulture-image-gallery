@@ -10,7 +10,11 @@
       "Bash(taskkill:*)",
       "Bash(KillShell e25b2b)",
       "Bash(PORT=3019 node server.js)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(pkill:*)",
+      "Bash(PORT=3020 node server.js)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
