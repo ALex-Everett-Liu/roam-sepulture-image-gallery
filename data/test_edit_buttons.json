@@ -1,0 +1,42 @@
+{
+  "images": [
+    {
+      "id": 1,
+      "title": "Major Image Test",
+      "description": "This is a major image",
+      "src": null,
+      "ranking": 9,
+      "tags": [
+        "major",
+        "test"
+      ],
+      "isMajor": true,
+      "groupId": "test-group"
+    },
+    {
+      "id": 2,
+      "title": "Subsidiary Image Test",
+      "description": "This is a subsidiary image",
+      "src": null,
+      "ranking": 8,
+      "tags": [
+        "subsidiary",
+        "test"
+      ],
+      "isMajor": false,
+      "groupId": "test-group",
+      "majorImageId": 1
+    },
+    {
+      "id": 3,
+      "title": "Standalone Image Test",
+      "description": "This is a standalone image",
+      "src": null,
+      "ranking": 7,
+      "tags": [
+        "standalone",
+        "test"
+      ]
+    }
+  ]
+}

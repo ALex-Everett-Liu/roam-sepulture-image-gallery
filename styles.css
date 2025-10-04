@@ -1325,7 +1325,8 @@ h1 {
 }
 
 .gallery-item:hover .image-controls,
-.standalone-image-container:hover .image-controls {
+.standalone-image-container:hover .image-controls,
+.subsidiary-item:hover .image-controls {
     opacity: 1;
 }
 
