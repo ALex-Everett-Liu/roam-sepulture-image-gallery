@@ -39,6 +39,13 @@ let isLoading = false;
 let currentJsonFile = 'images_data_groups.json';
 let availableFiles = [];
 
+// Tag cloud pagination variables
+let allTags = []; // All available tags
+let displayedTags = []; // Currently displayed tags
+let currentTagPage = 1;
+let tagsPerPage = 50; // Number of tags to display per page
+let totalTagPages = 1;
+
 // Pagination variables
 let currentPage = 1;
 let itemsPerPage = 12;
@@ -281,26 +288,157 @@ function hideLoadingState() {
     }
 }
 
-// Render tag cloud
+// Render tag cloud with pagination and search
 function renderTagCloud() {
     const tagCloud = document.getElementById('tag-cloud');
     if (!images || images.length === 0) {
         tagCloud.innerHTML = '<span style="color: var(--secondary-color);">No tags available</span>';
         return;
     }
-    
+
     // Only use tags from major images for filtering
     const majorImages = images.filter(img => img.isMajor !== false);
-    const allTags = [...new Set(majorImages.flatMap(img => img.tags || []))].sort();
-    
+    let filteredTags = [...new Set(majorImages.flatMap(img => img.tags || []))];
+
+    // Apply search filter if there's a search query
+    if (tagSearchQuery) {
+        filteredTags = filteredTags.filter(tag =>
+            tag.toLowerCase().includes(tagSearchQuery)
+        );
+    }
+
+    // Sort tags alphabetically
+    allTags = filteredTags.sort();
+
+    // Calculate pagination
+    totalTagPages = Math.ceil(allTags.length / tagsPerPage);
+    currentTagPage = Math.min(currentTagPage, totalTagPages) || 1;
+
+    // Get tags for current page
+    const startIndex = (currentTagPage - 1) * tagsPerPage;
+    const endIndex = startIndex + tagsPerPage;
+    displayedTags = allTags.slice(startIndex, endIndex);
+
+    // Clear existing tags
     tagCloud.innerHTML = '';
-    allTags.forEach(tag => {
+
+    // Render current page of tags
+    displayedTags.forEach(tag => {
         const tagElement = document.createElement('button');
         tagElement.className = 'tag';
         tagElement.textContent = tag;
         tagElement.onclick = () => toggleTag(tag, tagElement);
+
+        // Check if this tag is currently selected
+        if (selectedTags.includes(tag)) {
+            tagElement.classList.add('active');
+        }
+
         tagCloud.appendChild(tagElement);
     });
+
+    // Render pagination controls
+    renderTagPagination();
+}
+
+// Render tag pagination controls
+function renderTagPagination() {
+    const paginationContainer = document.getElementById('tag-pagination-container');
+    const paginationInfo = document.getElementById('tag-pagination-info-text');
+    const pageNumbersContainer = document.getElementById('tag-page-numbers');
+
+    // Hide pagination if there are no tags or only one page
+    if (allTags.length === 0 || totalTagPages <= 1) {
+        paginationContainer.style.display = 'none';
+        return;
+    }
+
+    // Show pagination container
+    paginationContainer.style.display = 'block';
+
+    // Update pagination info
+    const startTag = (currentTagPage - 1) * tagsPerPage + 1;
+    const endTag = Math.min(currentTagPage * tagsPerPage, allTags.length);
+    paginationInfo.textContent = `Showing ${startTag}-${endTag} of ${allTags.length} tags`;
+
+    // Clear existing page numbers
+    pageNumbersContainer.innerHTML = '';
+
+    // Calculate page number range to display
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentTagPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalTagPages, startPage + maxVisiblePages - 1);
+
+    // Adjust start page if we're near the end
+    if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    // Add page numbers
+    for (let i = startPage; i <= endPage; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.className = 'pagination-btn';
+        pageButton.textContent = i;
+        pageButton.onclick = () => goToTagPage(i);
+
+        if (i === currentTagPage) {
+            pageButton.classList.add('active');
+        }
+
+        pageNumbersContainer.appendChild(pageButton);
+    }
+
+    // Update navigation button states
+    const firstBtn = document.getElementById('tag-first-page-btn');
+    const prevBtn = document.getElementById('tag-prev-page-btn');
+    const nextBtn = document.getElementById('tag-next-page-btn');
+    const lastBtn = document.getElementById('tag-last-page-btn');
+
+    firstBtn.disabled = currentTagPage === 1;
+    prevBtn.disabled = currentTagPage === 1;
+    nextBtn.disabled = currentTagPage === totalTagPages;
+    lastBtn.disabled = currentTagPage === totalTagPages;
+}
+
+// Tag pagination navigation functions
+function goToFirstTagPage() {
+    currentTagPage = 1;
+    renderTagCloud();
+}
+
+function goToPreviousTagPage() {
+    if (currentTagPage > 1) {
+        currentTagPage--;
+        renderTagCloud();
+    }
+}
+
+function goToNextTagPage() {
+    if (currentTagPage < totalTagPages) {
+        currentTagPage++;
+        renderTagCloud();
+    }
+}
+
+function goToLastTagPage() {
+    currentTagPage = totalTagPages;
+    renderTagCloud();
+}
+
+function goToTagPage(page) {
+    if (page >= 1 && page <= totalTagPages) {
+        currentTagPage = page;
+        renderTagCloud();
+    }
+}
+
+function jumpToTagPage() {
+    const input = document.getElementById('tag-page-jump-input');
+    const page = parseInt(input.value);
+    if (page >= 1 && page <= totalTagPages) {
+        goToTagPage(page);
+        input.value = '';
+    }
 }
 
 // Toggle tag selection
@@ -327,18 +465,15 @@ function handleSort(event) {
     filterAndRender();
 }
 
-// Handle tag search
+// Handle tag search with pagination support
 function handleTagSearch(event) {
     tagSearchQuery = event.target.value.toLowerCase();
-    const tags = document.querySelectorAll('.tag');
-    
-    tags.forEach(tag => {
-        if (tag.textContent.toLowerCase().includes(tagSearchQuery)) {
-            tag.style.display = 'inline-block';
-        } else {
-            tag.style.display = 'none';
-        }
-    });
+
+    // Reset to first page when searching
+    currentTagPage = 1;
+
+    // Re-render the tag cloud with search applied
+    renderTagCloud();
 }
 
 // Calculate pagination data

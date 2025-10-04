@@ -9,7 +9,8 @@
       "Bash(findstr:*)",
       "Bash(taskkill:*)",
       "Bash(KillShell e25b2b)",
-      "Bash(PORT=3019 node server.js)"
+      "Bash(PORT=3019 node server.js)",
+      "Bash(python3:*)"
     ],
     "deny": [],
     "ask": []

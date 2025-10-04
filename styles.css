@@ -170,6 +170,76 @@ h1 {
     color: white;
 }
 
+/* Tag pagination styles */
+.tag-pagination-container {
+    margin: 15px 0;
+    padding: 15px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.tag-pagination-info {
+    text-align: center;
+    margin-bottom: 10px;
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+}
+
+.tag-pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.tag-page-numbers {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.tag-page-jump {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+}
+
+.tag-page-jump input {
+    padding: 4px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--bg-primary);
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.tag-page-jump input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+/* Responsive adjustments for tag pagination */
+@media (max-width: 768px) {
+    .tag-pagination-controls {
+        gap: 6px;
+    }
+
+    .tag-page-jump {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .tag-page-jump input {
+        width: 50px !important;
+    }
+}
+
 .gallery-item {
     position: relative;
     overflow: hidden;

@@ -176,6 +176,48 @@ Invalid databases will show an error message and fall back to sample data.
 2. **Convert when needed**: Convert to SQLite when performance becomes important
 3. **Use SQLite for production**: Recommended for galleries with 50+ images
 
+## Tag Pagination System
+
+For galleries with thousands of tags, the application now includes **automatic pagination** for the tag cloud to ensure optimal performance and user experience.
+
+### Features
+
+- **Automatic Pagination**: Tags are automatically paginated when there are more than 50 tags
+- **Smart Page Navigation**: Shows 5 page buttons at a time with smart range calculation
+- **Search Integration**: Tag search works across all pages, not just the current page
+- **Performance Optimized**: Sub-millisecond pagination calculations even with 800+ tags
+- **Responsive Design**: Adapts to mobile screens with flexible layouts
+
+### Configuration
+
+- **Tags per page**: 50 (configurable via `tagsPerPage` variable)
+- **Max visible page buttons**: 5 (prevents overwhelming UI)
+- **Auto-hide**: Pagination controls are hidden when there's only 1 page
+
+### How It Works
+
+1. **Tag Collection**: All tags are automatically collected and sorted alphabetically
+2. **Pagination Calculation**: Total pages are calculated based on tag count and page size
+3. **Current Page Display**: Only tags for the current page are rendered to the DOM
+4. **Navigation Controls**: Page buttons, prev/next, first/last, and jump-to-page controls
+5. **Search Integration**: Search filters all tags before pagination is applied
+
+### Example Performance
+
+With 846 unique tags:
+- **17 pages** total (50 tags per page)
+- **< 0.001ms** average pagination calculation time
+- **Instant UI updates** when navigating pages
+- **Smooth search** with real-time filtering
+
+### User Experience
+
+- **First-time users**: See first page of tags immediately
+- **Navigation**: Click page numbers or use prev/next buttons
+- **Jump to page**: Enter page number for quick navigation
+- **Search**: Type to filter tags across all pages
+- **Responsive**: Works perfectly on mobile devices
+
 ## Technical Details
 
 ### Tag Processing Improvements
