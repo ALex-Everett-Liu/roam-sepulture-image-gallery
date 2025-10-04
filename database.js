@@ -291,6 +291,217 @@ class DatabaseManager {
     }
 
     /**
+     * Add new image to database
+     */
+    async addImage(image) {
+        if (!this.db) {
+            throw new Error('Database not loaded');
+        }
+
+        try {
+            // Start transaction
+            this.db.run('BEGIN TRANSACTION');
+
+            // Insert image
+            const stmt = this.db.prepare(`
+                INSERT INTO images (id, title, description, src, ranking, width, height, is_major, group_id, major_image_id, date_added)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `);
+
+            stmt.run([
+                image.id,
+                image.title,
+                image.description || '',
+                image.src || '',
+                image.ranking || 5.0,
+                image.width || '',
+                image.height || '',
+                image.isMajor !== false ? 1 : 0,
+                image.groupId || null,
+                image.majorImageId || null,
+                image.date || new Date().toISOString()
+            ]);
+            stmt.free();
+
+            // Handle tags
+            if (image.tags && Array.isArray(image.tags) && image.tags.length > 0) {
+                for (const tagName of image.tags) {
+                    // Get or create tag
+                    const tagId = this.getOrCreateTag(tagName);
+
+                    // Create image-tag relationship
+                    const relStmt = this.db.prepare(`
+                        INSERT INTO image_tags (image_id, tag_id)
+                        VALUES (?, ?)
+                    `);
+                    relStmt.run([image.id, tagId]);
+                    relStmt.free();
+                }
+            }
+
+            // Commit transaction
+            this.db.run('COMMIT');
+
+        } catch (error) {
+            // Rollback transaction on error
+            this.db.run('ROLLBACK');
+            console.error('Error adding image to database:', error);
+            throw new Error(`Failed to add image: ${error.message}`);
+        }
+    }
+
+    /**
+     * Update existing image in database
+     */
+    async updateImage(image) {
+        if (!this.db) {
+            throw new Error('Database not loaded');
+        }
+
+        try {
+            // Start transaction
+            this.db.run('BEGIN TRANSACTION');
+
+            // Update image
+            const stmt = this.db.prepare(`
+                UPDATE images
+                SET title = ?, description = ?, src = ?, ranking = ?, width = ?, height = ?,
+                    is_major = ?, group_id = ?, major_image_id = ?, date_added = ?
+                WHERE id = ?
+            `);
+
+            const result = stmt.run([
+                image.title,
+                image.description || '',
+                image.src || '',
+                image.ranking || 5.0,
+                image.width || '',
+                image.height || '',
+                image.isMajor !== false ? 1 : 0,
+                image.groupId || null,
+                image.majorImageId || null,
+                image.date || new Date().toISOString(),
+                image.id
+            ]);
+            stmt.free();
+
+            if (result.changes === 0) {
+                throw new Error(`Image with ID ${image.id} not found`);
+            }
+
+            // Delete existing tag relationships
+            const deleteRelStmt = this.db.prepare('DELETE FROM image_tags WHERE image_id = ?');
+            deleteRelStmt.run([image.id]);
+            deleteRelStmt.free();
+
+            // Add new tag relationships
+            if (image.tags && Array.isArray(image.tags) && image.tags.length > 0) {
+                for (const tagName of image.tags) {
+                    // Get or create tag
+                    const tagId = this.getOrCreateTag(tagName);
+
+                    // Create image-tag relationship
+                    const relStmt = this.db.prepare(`
+                        INSERT INTO image_tags (image_id, tag_id)
+                        VALUES (?, ?)
+                    `);
+                    relStmt.run([image.id, tagId]);
+                    relStmt.free();
+                }
+            }
+
+            // Commit transaction
+            this.db.run('COMMIT');
+
+        } catch (error) {
+            // Rollback transaction on error
+            this.db.run('ROLLBACK');
+            console.error('Error updating image in database:', error);
+            throw new Error(`Failed to update image: ${error.message}`);
+        }
+    }
+
+    /**
+     * Delete image from database
+     */
+    async deleteImage(imageId) {
+        if (!this.db) {
+            throw new Error('Database not loaded');
+        }
+
+        try {
+            // Start transaction
+            this.db.run('BEGIN TRANSACTION');
+
+            // Delete tag relationships first (due to foreign key constraints)
+            const deleteRelStmt = this.db.prepare('DELETE FROM image_tags WHERE image_id = ?');
+            deleteRelStmt.run([imageId]);
+            deleteRelStmt.free();
+
+            // Delete image
+            const deleteImageStmt = this.db.prepare('DELETE FROM images WHERE id = ?');
+            const result = deleteImageStmt.run([imageId]);
+            deleteImageStmt.free();
+
+            if (result.changes === 0) {
+                throw new Error(`Image with ID ${imageId} not found`);
+            }
+
+            // Commit transaction
+            this.db.run('COMMIT');
+
+        } catch (error) {
+            // Rollback transaction on error
+            this.db.run('ROLLBACK');
+            console.error('Error deleting image from database:', error);
+            throw new Error(`Failed to delete image: ${error.message}`);
+        }
+    }
+
+    /**
+     * Get or create a tag
+     */
+    getOrCreateTag(tagName) {
+        if (!this.db) {
+            throw new Error('Database not loaded');
+        }
+
+        if (!tagName || typeof tagName !== 'string') {
+            throw new Error('Invalid tag name provided');
+        }
+
+        try {
+            // Check if tag already exists
+            const checkStmt = this.db.prepare('SELECT id FROM tags WHERE name = ?');
+            checkStmt.bind([tagName]);
+
+            if (checkStmt.step()) {
+                const result = checkStmt.getAsObject();
+                checkStmt.free();
+                return result.id;
+            }
+            checkStmt.free();
+
+            // Create new tag
+            const insertStmt = this.db.prepare('INSERT INTO tags (name) VALUES (?)');
+            const result = insertStmt.run([tagName]);
+            insertStmt.free();
+
+            // Get the last inserted rowid
+            const rowidResult = this.db.exec('SELECT last_insert_rowid() as id');
+            if (rowidResult && rowidResult.length > 0 && rowidResult[0].values.length > 0) {
+                return rowidResult[0].values[0][0];
+            } else {
+                throw new Error('Failed to get last insert rowid');
+            }
+
+        } catch (error) {
+            console.error('Error getting or creating tag:', error);
+            throw new Error(`Failed to get or create tag: ${error.message}`);
+        }
+    }
+
+    /**
      * Close database connection
      */
     close() {

@@ -5,6 +5,108 @@ All notable changes to the Roam Sepulture Image Gallery project will be document
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2025-10-04
+
+### Added - Complete CRUD Image Management System
+- **Full Create, Read, Update, Delete functionality for images**
+  - Add new images directly through the application interface
+  - Edit existing images with pre-filled forms containing current data
+  - Delete images with safety confirmation dialogs
+  - Support for all image properties (title, description, ranking, dimensions, tags, grouping)
+
+- **Comprehensive image editor modal**
+  - Professional form interface with all image properties
+  - Real-time form validation with clear error messages
+  - Smart defaults for common fields (ranking: 5.0, isMajor: true)
+  - Responsive design optimized for both desktop and mobile devices
+  - Keyboard shortcuts (Escape to close, Enter to save)
+
+- **Intuitive hover-based image controls**
+  - Edit button (blue) appears when hovering over any image
+  - Delete button (red) with confirmation to prevent accidental removal
+  - Smooth animations and visual feedback
+  - Controls available on all image types (standalone, major, subsidiary)
+
+- **REST API endpoints for CRUD operations**
+  - `POST /api/images` - Add new image with full property support
+  - `PUT /api/images` - Update existing image with atomic operations
+  - `DELETE /api/images` - Remove image with cascading cleanup
+  - Dual format support: works with both JSON files and SQLite databases
+  - Comprehensive error handling and validation
+
+- **Enhanced database operations**
+  - Transaction-based SQLite operations for data integrity
+  - Atomic JSON file updates with proper error recovery
+  - Tag relationship management with automatic cleanup
+  - Rollback support for failed operations
+  - Added `getOrCreateTag()` method for efficient tag handling
+
+### Technical Implementation
+- **Server-side enhancements**
+  - Robust validation for all CRUD operations
+  - Support for both JSON and SQLite database formats
+  - Proper HTTP status codes and error messages
+  - Security measures to prevent directory traversal
+
+- **Database manager improvements**
+  - `addImage()` method with transaction support and tag handling
+  - `updateImage()` method with atomic updates and relationship refresh
+  - `deleteImage()` method with cascading deletes and cleanup
+  - Enhanced `getOrCreateTag()` for efficient tag management
+  - Transaction rollback on errors to maintain data integrity
+
+- **Client-side JavaScript enhancements**
+  - `showAddImageModal()` - Opens clean form for new image creation
+  - `showEditImageModal()` - Opens pre-filled form for existing images
+  - `saveImage()` - Handles form submission with validation
+  - `confirmDeleteImage()` - Safety confirmation before deletion
+  - Full integration with existing gallery filtering and sorting
+
+### User Experience Benefits
+- **No more manual file editing required**
+  - Users can now manage entire galleries through the application interface
+  - Eliminates need to edit JSON or SQLite files directly
+  - Real-time updates to gallery display after changes
+  - Visual feedback with toast notifications for all operations
+
+- **Professional image management workflow**
+  - Intuitive controls that appear on hover
+  - Comprehensive form with helpful placeholders and validation
+  - Consistent behavior across all image types and layouts
+  - Mobile-friendly interface with touch-optimized controls
+
+- **Data safety and integrity**
+  - Confirmation dialogs prevent accidental deletions
+  - Transaction-based database operations ensure consistency
+  - Automatic backup and validation of changes
+  - Clear error messages and recovery options
+
+### Code Quality Improvements
+- **Comprehensive test coverage**
+  - Added `test_crud.js` for functionality verification
+  - Added `test_crud_api.js` for API endpoint testing
+  - Added `test_sqlite_crud.js` for database operation testing
+  - All CRUD operations verified across JSON and SQLite formats
+
+- **Enhanced error handling**
+  - Graceful handling of database connection issues
+  - Proper file system error management
+  - Network error recovery with retry logic
+  - User-friendly error messages and notifications
+
+### Backward Compatibility
+- **Seamless upgrade path**
+  - All existing JSON configurations continue to work unchanged
+  - No breaking changes to existing gallery functionality
+  - New CRUD features are additive enhancements
+  - Existing images display and function normally
+
+### Migration Notes
+- **Existing users**: No action required - upgrade is fully backward compatible
+- **New users**: Can immediately start using CRUD features without configuration
+- **Data integrity**: All existing images, tags, and groups remain intact
+- **Performance**: CRUD operations optimized for minimal impact on gallery performance
+
 ## [0.2.1] - 2025-09-22
 
 ### Bug Fixes - Bidirectional Aspect Ratio Support

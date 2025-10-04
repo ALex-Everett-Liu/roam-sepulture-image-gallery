@@ -39,6 +39,10 @@ let isLoading = false;
 let currentJsonFile = 'images_data_groups.json';
 let availableFiles = [];
 
+// CRUD Editor variables
+let currentEditingImage = null;
+let isEditMode = false;
+
 // Tag cloud pagination variables
 let allTags = []; // All available tags
 let displayedTags = []; // Currently displayed tags
@@ -914,6 +918,14 @@ function createMajorImage(img) {
     `<div class="placeholder" onclick="openFullscreen(null, '${img.title}', 'placeholder')">${img.title}</div>`;
 
     item.innerHTML = `
+        <div class="image-controls">
+            <button class="image-control-btn edit" onclick="showEditImageModal(${JSON.stringify(img).replace(/"/g, '&quot;')})" title="Edit Image">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="image-control-btn delete" onclick="confirmDeleteImage(${JSON.stringify(img).replace(/"/g, '&quot;')})" title="Delete Image">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
         ${mediaHtml}
         <div class="caption">
             ${img.title}
@@ -972,6 +984,14 @@ function createSubsidiaryImage(img, majorImage) {
         `<div class="placeholder" onclick="openFullscreen(null, '${displayTitle}', 'placeholder')">${displayTitle}</div>`;
 
     item.innerHTML = `
+        <div class="image-controls">
+            <button class="image-control-btn edit" onclick="showEditImageModal(${JSON.stringify(img).replace(/"/g, '&quot;')})" title="Edit Image">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="image-control-btn delete" onclick="confirmDeleteImage(${JSON.stringify(img).replace(/"/g, '&quot;')})" title="Delete Image">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
         ${mediaHtml}
         <div class="subsidiary-label">${displayTitle}</div>
     `;
@@ -1018,6 +1038,14 @@ function createStandaloneImage(img) {
         `<div class="placeholder" onclick="openFullscreen(null, '${img.title}', 'placeholder')">${img.title}</div>`;
 
     item.innerHTML = `
+        <div class="image-controls">
+            <button class="image-control-btn edit" onclick="showEditImageModal(${JSON.stringify(img).replace(/"/g, '&quot;')})" title="Edit Image">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="image-control-btn delete" onclick="confirmDeleteImage(${JSON.stringify(img).replace(/"/g, '&quot;')})" title="Delete Image">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
         ${mediaHtml}
         <div class="ranking">⭐ ${img.ranking}</div>
         <div class="caption">
@@ -1533,21 +1561,21 @@ function showToast(message, type = 'info', duration = 3000) {
         max-width: 300px;
         font-size: 14px;
     `;
-    
+
     toast.innerHTML = `
         <div style="display: flex; align-items: center; justify-content: space-between;">
             <span>${message}</span>
             <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; cursor: pointer; margin-left: 10px; font-size: 16px;">×</button>
         </div>
     `;
-    
+
     document.body.appendChild(toast);
-    
+
     // Animate in
     setTimeout(() => {
         toast.style.transform = 'translateX(0)';
     }, 10);
-    
+
     // Auto remove after duration
     setTimeout(() => {
         toast.style.transform = 'translateX(100%)';
@@ -1558,3 +1586,210 @@ function showToast(message, type = 'info', duration = 3000) {
         }, 300);
     }, duration);
 }
+
+// CRUD Image Editor Functions
+function showAddImageModal() {
+    isEditMode = false;
+    currentEditingImage = null;
+
+    document.getElementById('modal-title').textContent = 'Add New Image';
+    document.getElementById('image-editor-form').reset();
+
+    // Set default values
+    document.getElementById('image-ranking').value = '5.0';
+    document.getElementById('image-type').value = 'image';
+    document.getElementById('is-major').checked = true;
+
+    document.getElementById('image-editor-modal').style.display = 'flex';
+}
+
+function showEditImageModal(image) {
+    isEditMode = true;
+    currentEditingImage = image;
+
+    document.getElementById('modal-title').textContent = 'Edit Image';
+
+    // Pre-fill form with existing data
+    document.getElementById('image-title').value = image.title || '';
+    document.getElementById('image-ranking').value = image.ranking || '5.0';
+    document.getElementById('image-src').value = image.src || '';
+    document.getElementById('image-width').value = image.width || '';
+    document.getElementById('image-height').value = image.height || '';
+    document.getElementById('image-type').value = isVideoFile(image.src) ? 'video' : 'image';
+    document.getElementById('is-major').checked = image.isMajor !== false;
+    document.getElementById('group-id').value = image.groupId || '';
+    document.getElementById('image-description').value = image.description || '';
+    document.getElementById('image-tags').value = (image.tags || []).join(', ');
+
+    document.getElementById('image-editor-modal').style.display = 'flex';
+}
+
+function closeImageEditor() {
+    document.getElementById('image-editor-modal').style.display = 'none';
+    currentEditingImage = null;
+    isEditMode = false;
+}
+
+async function saveImage(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const imageData = {
+        title: formData.get('title').trim(),
+        description: formData.get('description').trim(),
+        src: formData.get('src').trim(),
+        ranking: parseFloat(formData.get('ranking')) || 5.0,
+        tags: formData.get('tags').split(',').map(tag => tag.trim()).filter(tag => tag),
+        width: formData.get('width').trim(),
+        height: formData.get('height').trim(),
+        isMajor: formData.get('isMajor') === 'on',
+        groupId: formData.get('groupId').trim() || null,
+        date: new Date().toISOString()
+    };
+
+    // Validate required fields
+    if (!imageData.title) {
+        showToast('Title is required', 'error');
+        return;
+    }
+
+    try {
+        if (isEditMode && currentEditingImage) {
+            // Update existing image
+            const updatedImage = {
+                ...currentEditingImage,
+                ...imageData
+            };
+
+            await updateImage(updatedImage);
+            showToast('Image updated successfully', 'success');
+        } else {
+            // Add new image
+            const newImage = {
+                id: Math.max(...images.map(img => img.id), 0) + 1,
+                ...imageData
+            };
+
+            await addImage(newImage);
+            showToast('Image added successfully', 'success');
+        }
+
+        closeImageEditor();
+        await loadImageData(); // Refresh the gallery
+
+    } catch (error) {
+        console.error('Error saving image:', error);
+        showToast(`Error saving image: ${error.message}`, 'error');
+    }
+}
+
+async function addImage(image) {
+    try {
+        const response = await fetch('/api/images', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                image: image,
+                dataFile: currentJsonFile
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.error || 'Failed to add image');
+        }
+
+    } catch (error) {
+        throw new Error(`Failed to add image: ${error.message}`);
+    }
+}
+
+async function updateImage(image) {
+    try {
+        const response = await fetch('/api/images', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                image: image,
+                dataFile: currentJsonFile
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.error || 'Failed to update image');
+        }
+
+    } catch (error) {
+        throw new Error(`Failed to update image: ${error.message}`);
+    }
+}
+
+async function deleteImage(image) {
+    try {
+        const response = await fetch('/api/images', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                imageId: image.id,
+                dataFile: currentJsonFile
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.error || 'Failed to delete image');
+        }
+
+    } catch (error) {
+        throw new Error(`Failed to delete image: ${error.message}`);
+    }
+}
+
+function confirmDeleteImage(image) {
+    if (confirm(`Are you sure you want to delete "${image.title}"? This action cannot be undone.`)) {
+        deleteImage(image).then(() => {
+            showToast('Image deleted successfully', 'success');
+            loadImageData(); // Refresh the gallery
+        }).catch(error => {
+            console.error('Error deleting image:', error);
+            showToast(`Error deleting image: ${error.message}`, 'error');
+        });
+    }
+}
+
+// Close modal when clicking outside
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('image-editor-modal');
+    if (event.target === modal) {
+        closeImageEditor();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const modal = document.getElementById('image-editor-modal');
+        if (modal.style.display === 'flex') {
+            closeImageEditor();
+        }
+    }
+});

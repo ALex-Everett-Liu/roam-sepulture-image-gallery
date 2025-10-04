@@ -261,12 +261,246 @@ app.get("/api/info", (req, res) => {
       "fullscreen-viewer",
       "settings-management",
       "sqlite-database-support",
-      "json-database-support"
+      "json-database-support",
+      "crud-operations"
     ],
     dataDir: DATA_DIR,
     supportedFormats: ["jpg", "jpeg", "png", "gif", "webp", "svg"],
     supportedDataFormats: ["json", "sqlite"]
   });
+});
+
+// CRUD Operations for Images
+
+// Add new image
+app.post("/api/images", async (req, res) => {
+  try {
+    const { image, dataFile } = req.body;
+
+    if (!image || !dataFile) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required parameters: image and dataFile"
+      });
+    }
+
+    // Validate required fields
+    if (!image.id || !image.title) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required image fields: id and title"
+      });
+    }
+
+    let filePath;
+    const isDatabaseFile = dataFile.toLowerCase().endsWith('.db');
+
+    // Find the data file
+    const possiblePaths = [
+      path.join(DATA_DIR, dataFile),
+      path.join(__dirname, dataFile),
+      path.resolve(dataFile)
+    ];
+
+    for (const tryPath of possiblePaths) {
+      if (fs.existsSync(tryPath)) {
+        filePath = tryPath;
+        break;
+      }
+    }
+
+    if (!filePath) {
+      return res.status(404).json({
+        success: false,
+        error: `Data file not found: ${dataFile}`
+      });
+    }
+
+    if (isDatabaseFile) {
+      // Handle SQLite database
+      const dbManager = new DatabaseManager();
+      await dbManager.loadDatabase(filePath);
+      await dbManager.addImage(image);
+      dbManager.close();
+    } else {
+      // Handle JSON file
+      const data = fs.readFileSync(filePath, 'utf8');
+      const jsonData = JSON.parse(data);
+
+      if (!jsonData.images || !Array.isArray(jsonData.images)) {
+        throw new Error("Invalid JSON format: missing images array");
+      }
+
+      jsonData.images.push(image);
+      fs.writeFileSync(filePath, JSON.stringify(jsonData, null, 2));
+    }
+
+    res.json({
+      success: true,
+      message: "Image added successfully",
+      imageId: image.id
+    });
+
+  } catch (error) {
+    console.error("Error adding image:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to add image",
+      details: error.message
+    });
+  }
+});
+
+// Update existing image
+app.put("/api/images", async (req, res) => {
+  try {
+    const { image, dataFile } = req.body;
+
+    if (!image || !dataFile || !image.id) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required parameters: image, dataFile, and image.id"
+      });
+    }
+
+    let filePath;
+    const isDatabaseFile = dataFile.toLowerCase().endsWith('.db');
+
+    // Find the data file
+    const possiblePaths = [
+      path.join(DATA_DIR, dataFile),
+      path.join(__dirname, dataFile),
+      path.resolve(dataFile)
+    ];
+
+    for (const tryPath of possiblePaths) {
+      if (fs.existsSync(tryPath)) {
+        filePath = tryPath;
+        break;
+      }
+    }
+
+    if (!filePath) {
+      return res.status(404).json({
+        success: false,
+        error: `Data file not found: ${dataFile}`
+      });
+    }
+
+    if (isDatabaseFile) {
+      // Handle SQLite database
+      const dbManager = new DatabaseManager();
+      await dbManager.loadDatabase(filePath);
+      await dbManager.updateImage(image);
+      dbManager.close();
+    } else {
+      // Handle JSON file
+      const data = fs.readFileSync(filePath, 'utf8');
+      const jsonData = JSON.parse(data);
+
+      if (!jsonData.images || !Array.isArray(jsonData.images)) {
+        throw new Error("Invalid JSON format: missing images array");
+      }
+
+      const imageIndex = jsonData.images.findIndex(img => img.id === image.id);
+      if (imageIndex === -1) {
+        throw new Error(`Image with ID ${image.id} not found`);
+      }
+
+      jsonData.images[imageIndex] = image;
+      fs.writeFileSync(filePath, JSON.stringify(jsonData, null, 2));
+    }
+
+    res.json({
+      success: true,
+      message: "Image updated successfully",
+      imageId: image.id
+    });
+
+  } catch (error) {
+    console.error("Error updating image:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to update image",
+      details: error.message
+    });
+  }
+});
+
+// Delete image
+app.delete("/api/images", async (req, res) => {
+  try {
+    const { imageId, dataFile } = req.body;
+
+    if (!imageId || !dataFile) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required parameters: imageId and dataFile"
+      });
+    }
+
+    let filePath;
+    const isDatabaseFile = dataFile.toLowerCase().endsWith('.db');
+
+    // Find the data file
+    const possiblePaths = [
+      path.join(DATA_DIR, dataFile),
+      path.join(__dirname, dataFile),
+      path.resolve(dataFile)
+    ];
+
+    for (const tryPath of possiblePaths) {
+      if (fs.existsSync(tryPath)) {
+        filePath = tryPath;
+        break;
+      }
+    }
+
+    if (!filePath) {
+      return res.status(404).json({
+        success: false,
+        error: `Data file not found: ${dataFile}`
+      });
+    }
+
+    if (isDatabaseFile) {
+      // Handle SQLite database
+      const dbManager = new DatabaseManager();
+      await dbManager.loadDatabase(filePath);
+      await dbManager.deleteImage(imageId);
+      dbManager.close();
+    } else {
+      // Handle JSON file
+      const data = fs.readFileSync(filePath, 'utf8');
+      const jsonData = JSON.parse(data);
+
+      if (!jsonData.images || !Array.isArray(jsonData.images)) {
+        throw new Error("Invalid JSON format: missing images array");
+      }
+
+      const imageIndex = jsonData.images.findIndex(img => img.id === imageId);
+      if (imageIndex === -1) {
+        throw new Error(`Image with ID ${imageId} not found`);
+      }
+
+      jsonData.images.splice(imageIndex, 1);
+      fs.writeFileSync(filePath, JSON.stringify(jsonData, null, 2));
+    }
+
+    res.json({
+      success: true,
+      message: "Image deleted successfully",
+      imageId: imageId
+    });
+
+  } catch (error) {
+    console.error("Error deleting image:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to delete image",
+      details: error.message
+    });
+  }
 });
 
 // Error handling middleware
