@@ -74,7 +74,7 @@ class DatabaseManager {
                     i.major_image_id,
                     i.date_added
                 FROM images i
-                ORDER BY i.id
+                ORDER BY i.pk_id
             `;
 
             const imagesResult = this.db.exec(imagesQuery);
@@ -97,7 +97,7 @@ class DatabaseManager {
                         value = value === 1;
                     } else if (col === 'ranking' && value !== null) {
                         value = parseFloat(value);
-                    } else if (col === 'id' || col === 'major_image_id') {
+                    } else if (col === 'pk_id' || col === 'major_image_id') {
                         value = value !== null ? parseInt(value) : null;
                     }
 
@@ -111,11 +111,12 @@ class DatabaseManager {
             // Get tags for each image
             const tagsQuery = `
                 SELECT
-                    it.image_id,
+                    i.id as image_id,
                     t.name as tag_name
                 FROM image_tags it
+                JOIN images i ON it.image_pk_id = i.pk_id
                 JOIN tags t ON it.tag_id = t.id
-                ORDER BY it.image_id, t.name
+                ORDER BY i.pk_id, t.name
             `;
 
             const tagsResult = this.db.exec(tagsQuery);
@@ -212,10 +213,10 @@ class DatabaseManager {
                     i.major_image_id,
                     i.date_added
                 FROM images i
-                JOIN image_tags it ON i.id = it.image_id
+                JOIN image_tags it ON i.pk_id = it.image_pk_id
                 JOIN tags t ON it.tag_id = t.id
                 WHERE t.name = ?
-                ORDER BY i.id
+                ORDER BY i.pk_id
             `;
 
             const stmt = this.db.prepare(query);
@@ -308,33 +309,58 @@ class DatabaseManager {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
 
-            stmt.run([
+            // Validate parameters to prevent undefined values
+            const params = [
                 image.id,
-                image.title,
+                image.title || '',
                 image.description || '',
                 image.src || '',
-                image.ranking,
+                image.ranking || 0,
                 image.width || '',
                 image.height || '',
                 image.isMajor !== false ? 1 : 0,
                 image.groupId || null,
                 image.majorImageId || null,
                 image.date || new Date().toISOString()
-            ]);
+            ];
+
+            // Check for any undefined values
+            for (let i = 0; i < params.length; i++) {
+                if (params[i] === undefined) {
+                    throw new Error(`Parameter at position ${i} is undefined. Image data: ${JSON.stringify(image)}`);
+                }
+            }
+
+            stmt.run(params);
             stmt.free();
 
             // Handle tags
             if (image.tags && Array.isArray(image.tags) && image.tags.length > 0) {
+                // Get the pk_id for the newly inserted image
+                const pkStmt = this.db.prepare('SELECT pk_id FROM images WHERE id = ?');
+                pkStmt.bind([image.id]);
+                let imagePkId = null;
+
+                if (pkStmt.step()) {
+                    const result = pkStmt.getAsObject();
+                    imagePkId = result.pk_id;
+                }
+                pkStmt.free();
+
+                if (!imagePkId) {
+                    throw new Error(`Failed to get pk_id for image with id ${image.id}`);
+                }
+
                 for (const tagName of image.tags) {
                     // Get or create tag
                     const tagId = this.getOrCreateTag(tagName);
 
                     // Create image-tag relationship
                     const relStmt = this.db.prepare(`
-                        INSERT INTO image_tags (image_id, tag_id)
+                        INSERT INTO image_tags (image_pk_id, tag_id)
                         VALUES (?, ?)
                     `);
-                    relStmt.run([image.id, tagId]);
+                    relStmt.run([imagePkId, tagId]);
                     relStmt.free();
                 }
             }
@@ -366,42 +392,66 @@ class DatabaseManager {
             console.log('🔄 Starting database transaction...');
             this.db.run('BEGIN TRANSACTION');
 
-            // Update image
+            // Handle ID change - if the ID has changed, we need to find the image by its original ID
+            let originalId = image.id;
+            let targetId = image.id;
+
+            // Check if this is an ID change by looking for the original image
+            const checkStmt = this.db.prepare('SELECT pk_id FROM images WHERE id = ?');
+            checkStmt.bind([image.id]);
+            let imagePkId = null;
+
+            if (checkStmt.step()) {
+                const result = checkStmt.getAsObject();
+                imagePkId = result.pk_id;
+            }
+            checkStmt.free();
+
+            // If image not found by current ID, it might be an ID change
+            // In this case, we need the original ID to find the image
+            if (!imagePkId && image.originalId) {
+                originalId = image.originalId;
+                targetId = image.id;
+
+                const originalStmt = this.db.prepare('SELECT pk_id FROM images WHERE id = ?');
+                originalStmt.bind([originalId]);
+                if (originalStmt.step()) {
+                    const result = originalStmt.getAsObject();
+                    imagePkId = result.pk_id;
+                }
+                originalStmt.free();
+
+                console.log(`🔀 ID change detected: "${originalId}" → "${targetId}"`);
+            }
+
+            if (!imagePkId) {
+                throw new Error(`Image with ID ${image.id} not found`);
+            }
+
+            // Update image - use original ID for WHERE clause, but new ID for SET if changed
             console.log('📝 Updating image in database...');
             const stmt = this.db.prepare(`
                 UPDATE images
-                SET title = ?, description = ?, src = ?, ranking = ?, width = ?, height = ?,
+                SET id = ?, title = ?, description = ?, src = ?, ranking = ?, width = ?, height = ?,
                     is_major = ?, group_id = ?, major_image_id = ?, date_added = ?
-                WHERE id = ?
+                WHERE pk_id = ?
             `);
 
             const updateParams = [
+                targetId,  // New ID (might be same as original)
                 image.title,
                 image.description || '',
                 image.src || '',
-                image.ranking,
+                image.ranking || 0,
                 image.width || '',
                 image.height || '',
                 image.isMajor !== false ? 1 : 0,
                 image.groupId || null,
                 image.majorImageId || null,
                 image.date || new Date().toISOString(),
-                image.id
+                imagePkId  // Use pk_id for WHERE clause
             ];
             console.log('📝 Update parameters:', updateParams);
-            console.log('📝 Update parameter mapping:', {
-                title: updateParams[0],
-                description: updateParams[1],
-                src: updateParams[2],
-                ranking: updateParams[3],
-                width: updateParams[4],
-                height: updateParams[5],
-                is_major: updateParams[6],
-                group_id: updateParams[7],
-                major_image_id: updateParams[8],
-                date_added: updateParams[9],
-                id: updateParams[10]
-            });
 
             const result = stmt.run(updateParams);
             stmt.free();
@@ -410,8 +460,6 @@ class DatabaseManager {
                 lastInsertRowid: result.lastInsertRowid
             });
 
-            console.log('📝 Update result:', result);
-
             if (result.changes === 0) {
                 console.log('❌ No rows were updated - image not found');
                 throw new Error(`Image with ID ${image.id} not found`);
@@ -419,23 +467,10 @@ class DatabaseManager {
 
             console.log('✅ Image updated successfully');
 
-            // Verify the update actually worked
-            console.log('🔍 Verifying update...');
-            const verifyStmt = this.db.prepare('SELECT width, height FROM images WHERE id = ?');
-            verifyStmt.bind([image.id]);
-            if (verifyStmt.step()) {
-                const result = verifyStmt.getAsObject();
-                console.log('🔍 Verification - Current values in database:', {
-                    width: result.width,
-                    height: result.height
-                });
-            }
-            verifyStmt.free();
-
             // Delete existing tag relationships
             console.log('🗑️ Deleting existing tag relationships...');
-            const deleteRelStmt = this.db.prepare('DELETE FROM image_tags WHERE image_id = ?');
-            const deleteResult = deleteRelStmt.run([image.id]);
+            const deleteRelStmt = this.db.prepare('DELETE FROM image_tags WHERE image_pk_id = ?');
+            const deleteResult = deleteRelStmt.run([imagePkId]);
             deleteRelStmt.free();
             console.log('🗑️ Deleted', deleteResult.changes, 'tag relationships');
 
@@ -450,10 +485,10 @@ class DatabaseManager {
 
                     // Create image-tag relationship
                     const relStmt = this.db.prepare(`
-                        INSERT INTO image_tags (image_id, tag_id)
+                        INSERT INTO image_tags (image_pk_id, tag_id)
                         VALUES (?, ?)
                     `);
-                    relStmt.run([image.id, tagId]);
+                    relStmt.run([imagePkId, tagId]);
                     relStmt.free();
                     console.log('🏷️ Created tag relationship for:', tagName);
                 }
@@ -488,8 +523,23 @@ class DatabaseManager {
             this.db.run('BEGIN TRANSACTION');
 
             // Delete tag relationships first (due to foreign key constraints)
-            const deleteRelStmt = this.db.prepare('DELETE FROM image_tags WHERE image_id = ?');
-            deleteRelStmt.run([imageId]);
+            // Get the pk_id for the image
+            const pkStmt = this.db.prepare('SELECT pk_id FROM images WHERE id = ?');
+            pkStmt.bind([imageId]);
+            let imagePkId = null;
+
+            if (pkStmt.step()) {
+                const result = pkStmt.getAsObject();
+                imagePkId = result.pk_id;
+            }
+            pkStmt.free();
+
+            if (!imagePkId) {
+                throw new Error(`Image with ID ${imageId} not found`);
+            }
+
+            const deleteRelStmt = this.db.prepare('DELETE FROM image_tags WHERE image_pk_id = ?');
+            deleteRelStmt.run([imagePkId]);
             deleteRelStmt.free();
 
             // Delete image

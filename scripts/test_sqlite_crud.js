@@ -1,13 +1,13 @@
 // Test SQLite Database CRUD Operations
-const DatabaseManager = require('./database');
+const DatabaseManager = require('../database');
 const fs = require('fs');
 const path = require('path');
 
 console.log('🗄️ Testing SQLite Database CRUD Operations...\n');
 
-// Test data
+// Test data with text ID
 const testImage = {
-  id: 88888,
+  id: "test-image-88888",
   title: "SQLite Test Image",
   description: "Testing SQLite CRUD operations",
   src: "https://picsum.photos/400/200",
@@ -47,10 +47,11 @@ async function testSQLiteCrud() {
     const SQL = dbManager.SQL;
     const db = new SQL.Database();
 
-    // Create tables
+    // Create tables with new schema
     db.run(`
       CREATE TABLE images (
-        id INTEGER PRIMARY KEY,
+        pk_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT UNIQUE NOT NULL,
         title TEXT NOT NULL,
         description TEXT,
         src TEXT,
@@ -73,10 +74,10 @@ async function testSQLiteCrud() {
 
     db.run(`
       CREATE TABLE image_tags (
-        image_id INTEGER,
+        image_pk_id INTEGER,
         tag_id INTEGER,
-        PRIMARY KEY (image_id, tag_id),
-        FOREIGN KEY (image_id) REFERENCES images(id) ON DELETE CASCADE,
+        PRIMARY KEY (image_pk_id, tag_id),
+        FOREIGN KEY (image_pk_id) REFERENCES images(pk_id) ON DELETE CASCADE,
         FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
       )
     `);
@@ -175,7 +176,7 @@ async function testSQLiteCrud() {
     // Test tag management
     console.log('\n5️⃣ Testing tag management...');
     const tagTestImage = {
-      id: 77777,
+      id: "tag-test-77777",
       title: "Tag Test Image",
       description: "Testing tag functionality",
       src: "https://picsum.photos/300/200",
@@ -187,7 +188,7 @@ async function testSQLiteCrud() {
 
     await dbManager.addImage(tagTestImage);
     const imagesWithTags = dbManager.getAllImages();
-    const tagImage = imagesWithTags.images.find(img => img.id === 77777);
+    const tagImage = imagesWithTags.images.find(img => img.id === "tag-test-77777");
 
     if (tagImage && tagImage.tags.length === 3) {
       console.log('✅ Tags added successfully');
@@ -197,7 +198,7 @@ async function testSQLiteCrud() {
     }
 
     // Clean up tag test image
-    await dbManager.deleteImage(77777);
+    await dbManager.deleteImage("tag-test-77777");
     console.log('✅ Tag test image cleaned up');
 
   } catch (error) {

@@ -30,7 +30,8 @@ class JsonToSqliteConverter {
         // Create images table
         this.db.run(`
             CREATE TABLE IF NOT EXISTS images (
-                id INTEGER PRIMARY KEY,
+                pk_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id TEXT UNIQUE NOT NULL,
                 title TEXT,
                 description TEXT,
                 src TEXT,
@@ -58,10 +59,10 @@ class JsonToSqliteConverter {
         // Create image_tags junction table
         this.db.run(`
             CREATE TABLE IF NOT EXISTS image_tags (
-                image_id INTEGER,
+                image_pk_id INTEGER,
                 tag_id INTEGER,
-                PRIMARY KEY (image_id, tag_id),
-                FOREIGN KEY (image_id) REFERENCES images (id) ON DELETE CASCADE,
+                PRIMARY KEY (image_pk_id, tag_id),
+                FOREIGN KEY (image_pk_id) REFERENCES images (pk_id) ON DELETE CASCADE,
                 FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
             )
         `);
@@ -81,7 +82,7 @@ class JsonToSqliteConverter {
         this.db.run(`CREATE INDEX IF NOT EXISTS idx_images_major ON images (is_major)`);
         this.db.run(`CREATE INDEX IF NOT EXISTS idx_images_ranking ON images (ranking)`);
         this.db.run(`CREATE INDEX IF NOT EXISTS idx_tags_name ON tags (name)`);
-        this.db.run(`CREATE INDEX IF NOT EXISTS idx_image_tags_image_id ON image_tags (image_id)`);
+        this.db.run(`CREATE INDEX IF NOT EXISTS idx_image_tags_image_pk_id ON image_tags (image_pk_id)`);
         this.db.run(`CREATE INDEX IF NOT EXISTS idx_image_tags_tag_id ON image_tags (tag_id)`);
     }
 
@@ -166,14 +167,22 @@ class JsonToSqliteConverter {
             return;
         }
 
+        // Get the pk_id for the given image id
+        const pkResult = this.db.exec('SELECT pk_id FROM images WHERE id = ?', [imageId]);
+        if (!pkResult.length || !pkResult[0].values.length) {
+            console.error(`Image with id ${imageId} not found`);
+            return;
+        }
+        const imagePkId = pkResult[0].values[0][0];
+
         for (const tagName of tags) {
             try {
                 const tagId = this.getOrCreateTag(tagName);
 
                 const stmt = this.db.prepare(
-                    'INSERT OR IGNORE INTO image_tags (image_id, tag_id) VALUES (?, ?)'
+                    'INSERT OR IGNORE INTO image_tags (image_pk_id, tag_id) VALUES (?, ?)'
                 );
-                stmt.run([imageId, tagId]);
+                stmt.run([imagePkId, tagId]);
                 stmt.free();
             } catch (error) {
                 console.error(`Error inserting tag relationship for image ${imageId}:`, error);

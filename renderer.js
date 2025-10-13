@@ -1756,6 +1756,7 @@ function showEditImageModal(image) {
 
     // Pre-fill form with existing data
     console.log('📝 Pre-filling form with image data:', {
+        id: image.id,
         title: image.title,
         ranking: image.ranking,
         src: image.src,
@@ -1767,6 +1768,7 @@ function showEditImageModal(image) {
         tags: image.tags
     });
 
+    document.getElementById('image-id').value = image.id || '';
     document.getElementById('image-title').value = image.title || '';
 
     // Handle ranking - NO auto-fill for ANY image type
@@ -1819,6 +1821,7 @@ async function saveImage(event) {
         // Create form data from the current editing image
         formData = new FormData();
         if (currentEditingImage) {
+            formData.append('id', currentEditingImage.id || '');
             formData.append('title', currentEditingImage.title || '');
             formData.append('description', currentEditingImage.description || '');
             formData.append('src', currentEditingImage.src || '');
@@ -1876,16 +1879,25 @@ async function saveImage(event) {
 
     try {
         if (isEditMode && currentEditingImage) {
-            // Update existing image - preserve critical fields like id
+            // Update existing image - handle ID changes properly
             console.log('📝 Updating image - Original:', currentEditingImage);
             console.log('📝 Form data:', imageData);
+
+            const originalId = currentEditingImage.id;
+            const newId = imageData.id;
+            const isIdChanged = originalId !== newId;
 
             const updatedImage = {
                 ...currentEditingImage,
                 ...imageData,
-                id: currentEditingImage.id,  // Ensure ID is preserved
                 date: currentEditingImage.date  // Ensure original date is preserved
             };
+
+            // If ID changed, add originalId to help backend find the image
+            if (isIdChanged) {
+                updatedImage.originalId = originalId;
+                console.log(`🔀 ID change detected: "${originalId}" → "${newId}"`);
+            }
 
             console.log('🔀 Object merging details:', {
                 originalKeys: Object.keys(currentEditingImage),
